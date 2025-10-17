@@ -1,0 +1,16 @@
+-- Insert comprehensive book dataset for the existing test user
+
+INSERT INTO user_books (user_id, title, author, genre, city, tags, notes, created_at) VALUES
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'To Kill a Mockingbird', 'Harper Lee', 'Fiction', 'Paris', ARRAY['classic', 'drama', 'social-justice'], 'A timeless classic about justice and morality', now() - interval '15 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'The Girl with the Dragon Tattoo', 'Stieg Larsson', 'Mystery', 'London', ARRAY['thriller', 'crime', 'nordic-noir'], 'Gripping Swedish crime thriller', now() - interval '8 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Pride and Prejudice', 'Jane Austen', 'Romance', 'New York', ARRAY['classic', 'regency', 'witty'], 'Beloved romance with Elizabeth and Darcy', now() - interval '22 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Gone Girl', 'Gillian Flynn', 'Mystery', 'Chicago', ARRAY['psychological', 'thriller', 'dark'], 'Mind-bending psychological thriller', now() - interval '5 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Dune', 'Frank Herbert', 'Sci-Fi', 'Tokyo', ARRAY['space-opera', 'politics', 'ecology'], 'Epic sci-fi masterpiece about power and ecology', now() - interval '3 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'The Lord of the Rings', 'J.R.R. Tolkien', 'Fantasy', 'Sydney', ARRAY['epic', 'adventure', 'mythology'], 'The ultimate fantasy epic', now() - interval '12 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Sapiens', 'Yuval Noah Harari', 'Non-Fiction', 'Berlin', ARRAY['history', 'anthropology', 'evolution'], 'Fascinating look at human evolution and society', now() - interval '18 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Harry Potter and the Philosopher''s Stone', 'J.K. Rowling', 'Fantasy', 'Edinburgh', ARRAY['magic', 'coming-of-age', 'school'], 'The beginning of the magical journey', now() - interval '25 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Neuromancer', 'William Gibson', 'Sci-Fi', 'Hong Kong', ARRAY['cyberpunk', 'ai', 'hacking'], 'Groundbreaking cyberpunk novel', now() - interval '1 day'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'The Notebook', 'Nicholas Sparks', 'Romance', 'Barcelona', ARRAY['contemporary', 'emotional', 'love-story'], 'Heartwarming love story', now() - interval '10 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'The Name of the Wind', 'Patrick Rothfuss', 'Fantasy', 'Rome', ARRAY['magic', 'storytelling', 'adventure'], 'Beautiful fantasy with excellent prose', now() - interval '6 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Educated', 'Tara Westover', 'Non-Fiction', 'Prague', ARRAY['memoir', 'education', 'family'], 'Powerful memoir about education and family', now() - interval '20 days'),
+('f7abfeb6-93f6-47d0-ac85-44e86703bdfa', 'Me Before You', 'Jojo Moyes', 'Romance', 'Vienna', ARRAY['contemporary', 'emotional', 'disability'], 'Emotional contemporary romance', now() - interval '14 days');

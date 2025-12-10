@@ -1,0 +1,438 @@
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Book Life Design System - Sophisticated colors for book lovers */
+
+@layer base {
+  :root {
+    /* iOS Safe Area CSS Variables */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    /* Base colors - warm parchment and deep text */
+    --background: 35 15% 96%;
+    --foreground: 25 25% 15%;
+
+    /* Card system - elegant elevation */
+    --card: 35 20% 98%;
+    --card-foreground: 25 25% 15%;
+
+    /* Interactive elements */
+    --popover: 35 20% 98%;
+    --popover-foreground: 25 25% 15%;
+
+    /* Brand colors - rich leather and gold */
+    --primary: 25 35% 25%;
+    --primary-foreground: 35 25% 95%;
+    --primary-glow: 35 45% 45%;
+    
+    /* Additional primary shades */
+    --primary-50: 35 45% 95%;
+    --primary-100: 35 35% 90%;
+    --primary-600: 25 40% 30%;
+    --primary-700: 25 45% 25%;
+    --primary-800: 25 50% 20%;
+
+    /* Secondary - sophisticated gray tones */
+    --secondary: 25 15% 20%;
+    --secondary-foreground: 35 25% 95%;
+    
+    /* Additional secondary shades */
+    --secondary-50: 25 25% 95%;
+    --secondary-100: 25 20% 90%;
+    --secondary-600: 25 20% 40%;
+    --secondary-700: 25 25% 30%;
+    --secondary-800: 25 30% 20%;
+    --secondary-900: 25 35% 15%;
+
+    /* Muted tones - subtle backgrounds */
+    --muted: 35 15% 92%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Accent - warm amber */
+    --accent: 35 55% 65%;
+    --accent-foreground: 25 25% 15%;
+    
+    /* Additional accent shades */
+    --accent-200: 35 45% 75%;
+    --accent-700: 35 65% 45%;
+
+    /* System colors */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 35 25% 95%;
+
+    --border: 35 20% 88%;
+    --input: 35 20% 94%;
+    --ring: 35 55% 65%;
+
+    --radius: 0.75rem;
+
+    /* Gradients for sophisticated effects */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--secondary)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+
+    /* 3D shadows and effects */
+    --shadow-elegant: 0 4px 20px -4px hsl(var(--primary) / 0.15);
+    --shadow-card: 0 2px 12px -2px hsl(var(--primary) / 0.1);
+    --shadow-glow: 0 0 30px hsl(var(--accent) / 0.3);
+
+    /* Smooth transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    margin: 0;
+    background-color: #f8f5f1;
+    /* Safe areas handled at component level */
+  }
+}
+
+
+@layer components {
+  .card {
+    @apply bg-card text-card-foreground rounded-lg border border-border shadow-card;
+  }
+  
+  .shadow-book {
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .bg-paper {
+    @apply bg-card;
+  }
+  
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 z-[9999];
+  }
+  
+  .modal-container {
+    @apply fixed inset-0 z-[10000] flex items-center justify-center p-4;
+  }
+  
+  .modal-content {
+    @apply bg-background rounded-lg shadow-book max-w-md w-full max-h-[90vh] overflow-y-auto relative z-[10001];
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.3s ease-out;
+  }
+  
+  /* Enhanced Animation Classes */
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  /* Map popup z-index fix */
+  .leaflet-popup-pane {
+    z-index: 100 !important;
+  }
+  
+  .leaflet-control-container {
+    z-index: 200 !important;
+  }
+
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Print Styles for Book Sticker */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Hide everything except the print section */
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+  
+  .print-only {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  @page {
+    size: 3in 3in;
+    margin: 0;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  html, body {
+    width: 3in;
+    height: 3in;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .sticker-print {
+    width: 3in;
+    height: 3in;
+    background: linear-gradient(135deg, #f5ede4 0%, #e8dcc8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    border: 3px solid #5a4a3a;
+    border-radius: 16px;
+    box-shadow: inset 0 2px 8px rgba(90, 74, 58, 0.1);
+  }
+  
+  .decorative-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #c9a876;
+  }
+  
+  .corner-tl {
+    top: 8px;
+    left: 8px;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 8px 0 0 0;
+  }
+  
+  .corner-tr {
+    top: 8px;
+    right: 8px;
+    border-left: none;
+    border-bottom: none;
+    border-radius: 0 8px 0 0;
+  }
+  
+  .corner-bl {
+    bottom: 8px;
+    left: 8px;
+    border-right: none;
+    border-top: none;
+    border-radius: 0 0 0 8px;
+  }
+  
+  .corner-br {
+    bottom: 8px;
+    right: 8px;
+    border-left: none;
+    border-top: none;
+    border-radius: 0 0 8px 0;
+  }
+  
+  .sticker-print .header {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  
+  .sticker-print .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  
+  .sticker-print .book-icon {
+    width: 24px;
+    height: 24px;
+    stroke: #5a4a3a;
+    stroke-width: 2;
+    fill: none;
+  }
+  
+  .sticker-print .logo {
+    font-size: 16px;
+    font-weight: bold;
+    color: #5a4a3a;
+    letter-spacing: 1px;
+  }
+  
+  .sticker-print .tagline {
+    font-size: 8px;
+    color: #8b7355;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  
+  .sticker-print .qr-container {
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(90, 74, 58, 0.15);
+    border: 2px solid #c9a876;
+    margin: 8px 0;
+  }
+  
+  .sticker-print .qr-code {
+    width: 100px;
+    height: 100px;
+    display: block;
+  }
+  
+  .sticker-print .code-section {
+    text-align: center;
+    background: linear-gradient(135deg, #5a4a3a 0%, #6d5a47 100%);
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(90, 74, 58, 0.25);
+    margin-top: 8px;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .sticker-print .code-label {
+    font-size: 7px;
+    color: #e8dcc8;
+    margin-bottom: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  
+  .sticker-print .code {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: #f5ede4;
+    letter-spacing: 2px;
+  }
+  
+  .sticker-print .footer {
+    font-size: 7px;
+    color: #8b7355;
+    text-align: center;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+  }
+}

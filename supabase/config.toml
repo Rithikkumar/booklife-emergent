@@ -1,0 +1,16 @@
+project_id = "dyzogjengmqoqnpfqnda"
+
+[functions.create-test-user]
+verify_jwt = false
+
+[functions.create-test-books] 
+verify_jwt = false
+
+[functions.debug-test]
+verify_jwt = false
+
+[functions.generate-community-recommendations]
+verify_jwt = false
+
+[functions.send-community-message]
+verify_jwt = true

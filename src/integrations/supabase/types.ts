@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -30,6 +30,7 @@ export type Database = {
           platform_meeting_id: string | null
           platform_meeting_url: string | null
           scheduled_date: string | null
+          show_participant_count: boolean
           status: string | null
           tags: string[] | null
           title: string
@@ -51,6 +52,7 @@ export type Database = {
           platform_meeting_id?: string | null
           platform_meeting_url?: string | null
           scheduled_date?: string | null
+          show_participant_count?: boolean
           status?: string | null
           tags?: string[] | null
           title: string
@@ -72,6 +74,7 @@ export type Database = {
           platform_meeting_id?: string | null
           platform_meeting_url?: string | null
           scheduled_date?: string | null
+          show_participant_count?: boolean
           status?: string | null
           tags?: string[] | null
           title?: string
@@ -128,6 +131,140 @@ export type Database = {
           id?: string
           reaction_type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          created_at: string
+          edited_at: string | null
+          id: string
+          is_edited: boolean
+          message: string
+          message_type: string
+          reactions: Json
+          reply_to_id: string | null
+          room_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean
+          message: string
+          message_type?: string
+          reactions?: Json
+          reply_to_id?: string | null
+          room_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          is_edited?: boolean
+          message?: string
+          message_type?: string
+          reactions?: Json
+          reply_to_id?: string | null
+          room_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_room_members: {
+        Row: {
+          id: string
+          is_muted: boolean
+          joined_at: string
+          last_read_at: string | null
+          role: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          last_read_at?: string | null
+          role?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          last_read_at?: string | null
+          role?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rooms: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          name: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          name?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          name?: string | null
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -645,6 +782,47 @@ export type Database = {
           },
         ]
       }
+      email_notifications: {
+        Row: {
+          class_id: string
+          created_at: string
+          email_type: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_notifications_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "book_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followed_books: {
         Row: {
           book_author: string | null
@@ -884,6 +1062,15 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      create_group_chat: {
+        Args: {
+          p_avatar_url?: string
+          p_description?: string
+          p_member_ids: string[]
+          p_name: string
+        }
+        Returns: string
+      }
       decrypt_credential: {
         Args: { encrypted_credential: string }
         Returns: string
@@ -903,6 +1090,31 @@ export type Database = {
       }
       encrypt_credential: { Args: { credential: string }; Returns: string }
       ensure_encryption_key: { Args: never; Returns: undefined }
+      get_all_book_classes: {
+        Args: { filter_categories?: string[]; search_query?: string }
+        Returns: {
+          book_author: string
+          book_cover_url: string
+          book_title: string
+          category: string
+          created_at: string
+          description: string
+          duration_minutes: number
+          host_name: string
+          host_user_id: string
+          host_username: string
+          id: string
+          max_participants: number
+          participant_count: number
+          platform: string
+          platform_join_url: string
+          scheduled_date: string
+          show_participant_count: boolean
+          status: string
+          tags: string[]
+          title: string
+        }[]
+      }
       get_book_statistics: {
         Args: never
         Returns: {
@@ -984,6 +1196,7 @@ export type Database = {
               platform: string
               platform_join_url: string
               scheduled_date: string
+              show_participant_count: boolean
               status: string
               tags: string[]
               title: string
@@ -1012,11 +1225,16 @@ export type Database = {
               platform: string
               platform_join_url: string
               scheduled_date: string
+              show_participant_count: boolean
               status: string
               tags: string[]
               title: string
             }[]
           }
+      get_or_create_chat_room: {
+        Args: { p_other_user_id: string }
+        Returns: string
+      }
       get_or_create_conversation: {
         Args: { user1_id: string; user2_id: string }
         Returns: string
@@ -1049,6 +1267,14 @@ export type Database = {
         }[]
       }
       is_admin: { Args: { user_id_param?: string }; Returns: boolean }
+      is_chat_room_admin: {
+        Args: { p_room_id: string; p_user_id?: string }
+        Returns: boolean
+      }
+      is_chat_room_member: {
+        Args: { p_room_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       is_class_owner: {
         Args: { class_id_param: string; user_id_param: string }
         Returns: boolean

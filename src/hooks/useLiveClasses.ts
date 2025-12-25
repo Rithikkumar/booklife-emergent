@@ -22,6 +22,7 @@ export interface LiveClass {
   participant_count: number;
   is_ongoing: boolean;
   minutes_since_start: number;
+  show_participant_count: boolean;
 }
 
 export interface UserInterest {
@@ -188,6 +189,10 @@ export const useLiveClasses = () => {
       
       // Refresh the classes to update participant count
       await fetchLiveClasses();
+      
+      // Dispatch event so other components can refresh
+      window.dispatchEvent(new CustomEvent('classJoined'));
+      
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to join class';

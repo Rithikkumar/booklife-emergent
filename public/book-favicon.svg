@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Warm brown background with subtle corner rounding -->
-  <rect x="0" y="0" width="32" height="32" rx="5" ry="5" fill="#B08D66" />
+  <defs>
+    <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#563D2D"/>
+      <stop offset="100%" style="stop-color:#A6863E"/>
+    </linearGradient>
+  </defs>
   
-  <!-- Book icon in white (matches header icon exactly) -->
-  <g transform="translate(4, 5) scale(1.05)">
-    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Gradient background with rounded corners matching header icon -->
+  <rect x="0" y="0" width="32" height="32" rx="8" ry="8" fill="url(#gradient-primary)" />
+  
+  <!-- BookOpen icon centered and properly scaled -->
+  <g transform="translate(4, 5)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
   </g>
 </svg>

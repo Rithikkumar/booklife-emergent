@@ -17,14 +17,13 @@ const CommunitySidebar: React.FC<CommunitySidebarProps> = ({
   recommendedSection,
   isAuthenticated = false
 }) => {
-  const allMenuItems = [
-    { id: 'all', label: 'All Communities', icon: Globe, color: 'text-primary' },
+  // Always show all menu items to prevent layout shift - auth-required items will redirect to login
+  const menuItems = [
+    { id: 'all', label: 'All Communities', icon: Globe, color: 'text-primary', requiresAuth: false },
     { id: 'joined', label: 'Joined Communities', icon: UserPlus, color: 'text-green-600', requiresAuth: true },
     { id: 'created', label: 'Created Communities', icon: Crown, color: 'text-yellow-600', requiresAuth: true },
     { id: 'recommended', label: 'Recommended', icon: Heart, color: 'text-pink-600', requiresAuth: true }
   ];
-
-  const menuItems = allMenuItems.filter(item => !item.requiresAuth || isAuthenticated);
 
   return (
     <div className="space-y-4">

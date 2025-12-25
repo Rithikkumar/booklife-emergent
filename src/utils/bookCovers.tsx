@@ -3,29 +3,12 @@
  */
 
 import React from 'react';
-
-interface OpenLibrarySearchResult {
-  docs: {
-    key: string;
-    title: string;
-    author_name?: string[];
-    cover_i?: number;
-    isbn?: string[];
-  }[];
-}
-
-interface GoogleBooksResult {
-  items?: {
-    volumeInfo: {
-      imageLinks?: {
-        thumbnail?: string;
-        small?: string;
-        medium?: string;
-        large?: string;
-      };
-    };
-  }[];
-}
+import { 
+  validateOpenLibraryResponse, 
+  validateGoogleBooksResponse,
+  isAllowedImageUrl,
+  type ValidatedOpenLibraryBook 
+} from './apiValidation';
 
 // Cache for successful cover lookups with cache busting capability
 const coverCache = new Map<string, string>();
@@ -103,7 +86,9 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
       const response = await fetch(searchUrl);
       if (!response.ok) continue;
       
-      const data: OpenLibrarySearchResult = await response.json();
+      const rawData = await response.json();
+      // Validate API response
+      const data = validateOpenLibraryResponse(rawData);
       
       if (data.docs && data.docs.length > 0) {
         for (const book of data.docs) {
@@ -114,7 +99,6 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
               author.toLowerCase().includes(bookAuthor.toLowerCase())
             );
             if (!authorMatch) {
-              console.log('Skipping book due to author mismatch:', book.title, 'by', book.author_name);
               continue;
             }
           }
@@ -123,16 +107,14 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
           const titleMatch = book.title.toLowerCase().includes(titleVariation.toLowerCase()) ||
                             titleVariation.toLowerCase().includes(book.title.toLowerCase());
           if (!titleMatch) {
-            console.log('Skipping book due to title mismatch:', book.title);
             continue;
           }
           
           // Try cover_i first (most reliable)
           if (book.cover_i) {
             const coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-${size}.jpg`;
-            console.log('Testing cover:', coverUrl, 'for', book.title, 'by', book.author_name);
-            // Test if image exists
-            if (await testImageExists(coverUrl)) {
+            // Validate URL domain before using
+            if (isAllowedImageUrl(coverUrl) && await testImageExists(coverUrl)) {
               return coverUrl;
             }
           }
@@ -140,7 +122,7 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
           // Fallback to ISBN if available
           if (book.isbn && book.isbn.length > 0) {
             const coverUrl = `https://covers.openlibrary.org/b/isbn/${book.isbn[0]}-${size}.jpg`;
-            if (await testImageExists(coverUrl)) {
+            if (isAllowedImageUrl(coverUrl) && await testImageExists(coverUrl)) {
               return coverUrl;
             }
           }
@@ -166,7 +148,9 @@ const tryGoogleBooks = async (title: string, author?: string): Promise<string | 
     const response = await fetch(url);
     if (!response.ok) return null;
     
-    const data: GoogleBooksResult = await response.json();
+    const rawData = await response.json();
+    // Validate API response
+    const data = validateGoogleBooksResponse(rawData);
     
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
@@ -177,6 +161,7 @@ const tryGoogleBooks = async (title: string, author?: string): Promise<string | 
           if (coverUrl) {
             // Convert http to https if needed
             const httpsUrl = coverUrl.replace('http://', 'https://');
+            // Validate URL before using
             if (await testImageExists(httpsUrl)) {
               return httpsUrl;
             }

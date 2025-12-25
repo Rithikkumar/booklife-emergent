@@ -9,6 +9,7 @@ interface SearchHeaderProps {
   placeholder: string;
   onSearch?: (query: string) => void;
   icon?: React.ComponentType<any>;
+  hideTitle?: boolean;
 }
 
 const SearchHeader: React.FC<SearchHeaderProps> = ({
@@ -16,14 +17,17 @@ const SearchHeader: React.FC<SearchHeaderProps> = ({
   subtitle,
   placeholder,
   onSearch,
-  icon: Icon = Search
+  icon: Icon = Search,
+  hideTitle = false
 }) => {
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold mb-4 flex items-center justify-center">
-        <Icon className="h-5 w-5 mr-2 text-primary" />
-        {title}
-      </h2>
+      {!hideTitle && (
+        <h2 className="text-2xl font-bold mb-4 flex items-center justify-center">
+          <Icon className="h-5 w-5 mr-2 text-primary" />
+          {title}
+        </h2>
+      )}
       {subtitle && (
         <p className="text-muted-foreground mb-4">{subtitle}</p>
       )}

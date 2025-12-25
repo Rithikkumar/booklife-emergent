@@ -7,6 +7,7 @@ import AuthGuard from "./components/auth/AuthGuard";
 import { useNativeFeatures } from "./hooks/useNativeFeatures";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useEffect } from "react";
+import { cleanupExpiredCaches } from "./utils/securityCache";
 
 import Landing from "./pages/Landing";
 import RegisterBook from "./pages/RegisterBook";
@@ -27,6 +28,7 @@ import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import Messages from "./pages/Messages";
 import MessageThread from "./pages/MessageThread";
+import ScanBook from "./pages/ScanBook";
 
 
 
@@ -46,6 +48,9 @@ const App = () => {
   const { isSupported } = usePushNotifications();
 
   useEffect(() => {
+    // Clean up expired caches on app startup
+    cleanupExpiredCaches();
+    
     if (isNative) {
       console.log('Running as native app with push notifications:', isSupported);
     }
@@ -66,6 +71,9 @@ const App = () => {
               <Auth />
             </AuthGuard>
           } />
+          
+          {/* Scan route - handles QR code scans, manages its own auth redirect */}
+          <Route path="/scan/:code" element={<ScanBook />} />
           
           {/* Protected routes */}
           <Route path="/register-book" element={

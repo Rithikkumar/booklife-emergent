@@ -100,32 +100,30 @@ const Explore = () => {
     <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={scrollKey} ready={!loading}>
       
       <div className="pb-12">
-        <div className="container mx-auto px-1 sm:px-3 lg:px-4 max-w-7xl w-full">
-          {/* Header */}
-          <div className="text-center mb-8 lg:mb-12">
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
-              Explore Book Passing
+        <div className="container mx-auto px-1 sm:px-3 lg:px-4 max-w-7xl w-full space-y-6">
+          {/* Centered Header */}
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              {getDisplayTitle()}
             </h1>
-            <p className="text-muted-foreground text-base lg:text-lg max-w-2xl mx-auto">
-              Discover trending books, follow their journeys, and explore stories from readers around the world
+            <p className="text-muted-foreground text-sm mt-1">
+              Discover trending books and follow their journeys around the world
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-8 lg:mb-12">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary/70 h-5 w-5 z-10" />
-              <Input
-                placeholder="Search by book title, author, genre, or topic..."
-                className="pl-10 h-12 border-2 border-border/60 focus:border-primary/50 bg-background/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 w-full"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </div>
+          {/* Search Bar - Centered with constrained width */}
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary/70 h-5 w-5 z-10" />
+            <Input
+              placeholder="Search by book title, author, genre, or topic..."
+              className="pl-10 h-12 border-2 border-border/60 focus:border-primary/50 bg-background/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 w-full"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
           </div>
 
-          {/* Multi-Select Filters */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8 lg:mb-12">
+          {/* Multi-Select Filters - Left Aligned */}
+          <div className="flex flex-wrap justify-start gap-2">
             {mainFilterOptions.map((filter) => {
               const Icon = filter.icon;
               const isActive = activeFilters.includes(filter.key);
@@ -214,27 +212,9 @@ const Explore = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filtered Books - Full width on mobile/tablet, 3/4 on desktop */}
-            <div className="xl:col-span-3 w-full min-w-0">
-              <div className="flex flex-col items-center mb-6 gap-3">
-                <h2 className="text-xl sm:text-2xl font-bold flex items-center">
-                  {getDisplayIconComponent()}
-                  {getDisplayTitle()}
-                </h2>
-                <div className="flex items-center gap-4">
-                  {!countLoading && totalCount > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      {totalCount} total book{totalCount !== 1 ? 's' : ''} in our library
-                    </span>
-                  )}
-                  {activeFilters.includes('trending') && books.length > 0 && (
-                    <Badge variant="secondary" className="text-xs bg-gradient-primary text-primary-foreground">
-                      🔥 Top {Math.min(books.length, 50)} Trending
-                    </Badge>
-                  )}
-                </div>
-              </div>
+            <div className="lg:col-span-3 w-full min-w-0">
 
               {/* Loading State */}
               {loading && (
@@ -397,8 +377,8 @@ const Explore = () => {
             </div>
 
             {/* Recent Stories - Sidebar */}
-            <div className="w-full min-w-0">
-              <h2 className="text-xl sm:text-2xl font-bold mb-6">Recent Stories</h2>
+            <div className="lg:col-span-1 w-full min-w-0">
+              <h2 className="text-lg font-bold mb-4">Recent Stories</h2>
               
               {storiesLoading && (
                 <div className="flex items-center justify-center py-8">

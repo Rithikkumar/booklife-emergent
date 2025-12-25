@@ -11,6 +11,7 @@ interface TimelineEntry {
   city: string;
   notes: string;
   created_at: string;
+  user_id?: string;
   profile: {
     username: string;
     display_name: string | null;
@@ -20,9 +21,10 @@ interface TimelineEntry {
 interface BookStoryTimelineProps {
   entries: TimelineEntry[];
   loading?: boolean;
+  allowedUserIds?: string[];
 }
 
-const BookStoryTimeline: React.FC<BookStoryTimelineProps> = ({ entries, loading = false }) => {
+const BookStoryTimeline: React.FC<BookStoryTimelineProps> = ({ entries, loading = false, allowedUserIds }) => {
   if (loading) {
     return (
       <div className="space-y-6">
@@ -84,6 +86,7 @@ const BookStoryTimeline: React.FC<BookStoryTimelineProps> = ({ entries, loading 
                 bookId={entry.id}
                 entry={entry}
                 showComments={true}
+                allowedUserIds={allowedUserIds}
               />
             </div>
           </motion.div>

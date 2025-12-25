@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useRateLimiter } from './useRateLimiter';
+import { setSecureCache, getSecureCache } from '@/utils/securityCache';
 
 export interface ChatMessage {
   id: string;
@@ -69,9 +70,9 @@ export const useCommunityChat = (communityId?: string) => {
     if (!communityId) return;
 
     try {
-      // Check cache first (only for initial load)
+      // Check cache first (only for initial load) - with expiration check
       if (offset === 0 && messageCacheKey) {
-        const cached = localStorage.getItem(messageCacheKey);
+        const cached = getSecureCache(messageCacheKey);
         if (cached) {
           try {
             const cachedMessages = JSON.parse(cached);
@@ -80,7 +81,6 @@ export const useCommunityChat = (communityId?: string) => {
             return;
           } catch (e) {
             console.error('Failed to parse cached messages:', e);
-            localStorage.removeItem(messageCacheKey);
           }
         }
       }
@@ -112,9 +112,9 @@ export const useCommunityChat = (communityId?: string) => {
 
         if (offset === 0) {
           setMessages(transformedMessages as ChatMessage[]);
-          // Cache last 50 messages
+          // Cache last 50 messages with 24-hour expiration
           if (messageCacheKey) {
-            localStorage.setItem(messageCacheKey, JSON.stringify(transformedMessages.slice(-50)));
+            setSecureCache(messageCacheKey, JSON.stringify(transformedMessages.slice(-50)));
           }
         } else {
           setMessages(prev => [...transformedMessages as ChatMessage[], ...prev]);
@@ -203,8 +203,10 @@ export const useCommunityChat = (communityId?: string) => {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    // Use getSession() for instant cached data instead of getUser() which makes a network request
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const user = session.user;
 
     // Create temporary message ID and timestamp
     const tempId = `temp-${crypto.randomUUID()}`;
@@ -306,9 +308,9 @@ export const useCommunityChat = (communityId?: string) => {
           const updated = prev.map(msg => 
             msg.id === tempId ? transformedMessage : msg
           );
-          // Update cache with latest state (not stale closure)
+          // Update cache with latest state (with 24-hour expiration)
           if (messageCacheKey) {
-            localStorage.setItem(messageCacheKey, JSON.stringify(updated.slice(-50)));
+            setSecureCache(messageCacheKey, JSON.stringify(updated.slice(-50)));
           }
           return updated;
         });
@@ -351,36 +353,45 @@ export const useCommunityChat = (communityId?: string) => {
     }
   }, [communityId, toast, messageCacheKey]);
 
-  // Add reaction to message
+  // Add reaction to message with optimistic UI (one reaction per user per message)
   const addReaction = useCallback(async (messageId: string, emoji: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    // Skip temporary messages
+    if (messageId.startsWith('temp-')) return;
 
-      const message = messages.find(m => m.id === messageId);
-      if (!message) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const userId = session.user.id;
 
-      const currentReactions = message.reactions || {};
-      const userReactions = currentReactions[emoji] || [];
-      
-      let newReactions;
-      if (userReactions.includes(user.id)) {
-        // Remove reaction
-        newReactions = {
-          ...currentReactions,
-          [emoji]: userReactions.filter(id => id !== user.id)
-        };
-        if (newReactions[emoji].length === 0) {
-          delete newReactions[emoji];
-        }
-      } else {
-        // Add reaction
-        newReactions = {
-          ...currentReactions,
-          [emoji]: [...userReactions, user.id]
-        };
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
+
+    const currentReactions = message.reactions || {};
+    
+    // Check if user already has THIS emoji reaction (for toggle-off)
+    const userHasThisReaction = (currentReactions[emoji] || []).includes(userId);
+    
+    // Build new reactions: first remove user from ALL emoji types
+    let newReactions: Record<string, string[]> = {};
+    for (const [existingEmoji, userIds] of Object.entries(currentReactions)) {
+      const filteredIds = userIds.filter(id => id !== userId);
+      if (filteredIds.length > 0) {
+        newReactions[existingEmoji] = filteredIds;
       }
+    }
+    
+    // Add the new reaction (unless toggling off the same emoji)
+    if (!userHasThisReaction) {
+      newReactions[emoji] = [...(newReactions[emoji] || []), userId];
+    }
 
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, reactions: newReactions }
+        : msg
+    ));
+
+    try {
       const { error } = await supabase
         .from('community_messages')
         .update({ reactions: newReactions })
@@ -389,11 +400,43 @@ export const useCommunityChat = (communityId?: string) => {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating reaction:', error);
+      // Rollback: Restore original reactions
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, reactions: currentReactions }
+          : msg
+      ));
+      toast({
+        title: "Error",
+        description: "Failed to update reaction",
+        variant: "destructive",
+      });
     }
-  }, [messages]);
+  }, [messages, toast]);
 
-  // Delete message
+  // Delete message with optimistic update
   const deleteMessage = useCallback(async (messageId: string) => {
+    // Store the message in case we need to restore it
+    const messageToDelete = messages.find(m => m.id === messageId);
+    if (!messageToDelete) return;
+
+    // Optimistically remove message from UI immediately
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+
+    // Also clear the cache to prevent stale data
+    if (messageCacheKey) {
+      const cached = getSecureCache(messageCacheKey);
+      if (cached) {
+        try {
+          const cachedMessages = JSON.parse(cached);
+          const updatedCache = cachedMessages.filter((msg: ChatMessage) => msg.id !== messageId);
+          setSecureCache(messageCacheKey, JSON.stringify(updatedCache));
+        } catch (e) {
+          console.error('Failed to update cache:', e);
+        }
+      }
+    }
+
     try {
       const { error } = await supabase
         .from('community_messages')
@@ -403,13 +446,19 @@ export const useCommunityChat = (communityId?: string) => {
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting message:', error);
+      
+      // Restore the message on error
+      setMessages(prev => [...prev, messageToDelete].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      ));
+      
       toast({
         title: "Error",
-        description: "Failed to delete message",
+        description: "Failed to delete message. You can only delete messages within 1 hour.",
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [messages, toast, messageCacheKey]);
 
   // Typing indicator functions - using Broadcast for real-time performance
   const startTyping = useCallback(async () => {

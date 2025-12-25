@@ -87,11 +87,20 @@ const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityNam
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !canSendMessages) return;
+    // Guard: prevent double-send
+    if (!message.trim() || !canSendMessages || sendingMessage) return;
 
-    await sendMessage(message, 'text', replyingTo?.id);
+    const messageToSend = message.trim();
+    const replyToIdToSend = replyingTo?.id;
+
+    // Clear immediately to prevent double-send on rapid Enter presses
     setMessage('');
     setReplyingTo(null);
+
+    await sendMessage(messageToSend, 'text', replyToIdToSend);
+
+    // Re-focus the input after sending
+    messageInputRef.current?.focus();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -131,6 +140,14 @@ const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityNam
 
   const formatTimestamp = (timestamp: string) => {
     return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+  };
+
+  // Check if message can be deleted (within 1 hour)
+  const canDeleteMessage = (createdAt: string) => {
+    const messageTime = new Date(createdAt).getTime();
+    const now = Date.now();
+    const oneHourMs = 60 * 60 * 1000; // 1 hour in milliseconds
+    return (now - messageTime) < oneHourMs;
   };
 
   const renderMessage = (msg: ChatMessage) => {
@@ -182,7 +199,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityNam
             <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
             
             {/* Message actions */}
-            <div className={`opacity-0 group-hover:opacity-100 transition-opacity absolute -top-3 ${isOwnMessage ? 'right-0' : 'left-0'} z-10`}>
+            <div className={`opacity-0 group-hover:opacity-100 transition-opacity absolute -top-10 ${isOwnMessage ? 'right-0' : 'left-0'} z-10`}>
               <div className="flex items-center gap-0.5 bg-card border rounded-full px-2 py-1 shadow-lg">
                 {reactionOptions.map((reaction) => (
                   <Button
@@ -209,7 +226,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityNam
                   <Reply className="h-3.5 w-3.5" />
                 </Button>
 
-                {isOwnMessage && (
+                {isOwnMessage && canDeleteMessage(msg.created_at) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full hover:bg-accent text-foreground">
@@ -377,7 +394,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityNam
                 onKeyDown={handleKeyPress}
                 onBlur={stopTyping}
                 className="min-h-[40px] max-h-[120px] resize-none"
-                disabled={sendingMessage || !canSendMessages || permissionsLoading}
+                disabled={!canSendMessages || permissionsLoading}
                 maxLength={2000}
               />
             <Button 

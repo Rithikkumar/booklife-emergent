@@ -20,12 +20,14 @@ export interface BookStory {
 
 interface BookStoriesResult {
   stories: BookStory[];
+  ownerUserIds: string[];
   loading: boolean;
   error: string | null;
 }
 
 export const useBookStories = (bookTitle?: string, bookAuthor?: string): BookStoriesResult => {
   const [stories, setStories] = useState<BookStory[]>([]);
+  const [ownerUserIds, setOwnerUserIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,6 +104,10 @@ export const useBookStories = (bookTitle?: string, bookAuthor?: string): BookSto
       }) || [];
 
       setStories(storiesWithProfiles);
+      
+      // Extract unique owner user IDs (all users who have ever owned this book)
+      const uniqueOwnerIds = [...new Set(data?.map(book => book.user_id).filter(Boolean) as string[])];
+      setOwnerUserIds(uniqueOwnerIds);
     } catch (err) {
       console.error('Error fetching book stories:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch book stories');
@@ -110,5 +116,5 @@ export const useBookStories = (bookTitle?: string, bookAuthor?: string): BookSto
     }
   };
 
-  return { stories, loading, error };
+  return { stories, ownerUserIds, loading, error };
 };

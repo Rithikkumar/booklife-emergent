@@ -83,20 +83,29 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
     setLoading(true);
 
     try {
-      const existingReaction = reactions.find(r => r.type === reactionType && r.hasReacted);
+      const clickedReaction = reactions.find(r => r.type === reactionType && r.hasReacted);
+      const anyExistingReaction = reactions.find(r => r.hasReacted);
 
-      if (existingReaction) {
-        // Remove reaction
+      if (clickedReaction) {
+        // Toggle off - user clicked their current reaction
         const { error } = await supabase
           .from('book_story_reactions')
           .delete()
           .eq('book_id', bookId)
-          .eq('user_id', user.id)
-          .eq('reaction_type', reactionType);
+          .eq('user_id', user.id);
 
         if (error) throw error;
       } else {
-        // Add reaction
+        // First remove any existing reaction by this user
+        if (anyExistingReaction) {
+          await supabase
+            .from('book_story_reactions')
+            .delete()
+            .eq('book_id', bookId)
+            .eq('user_id', user.id);
+        }
+        
+        // Then add the new reaction
         const { error } = await supabase
           .from('book_story_reactions')
           .insert({

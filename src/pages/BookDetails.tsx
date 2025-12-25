@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, MapPin, Clock, User, X, Eye, ArrowLeft, Loader2, Check } from 'lucide-react';
+import { BookOpen, MapPin, Clock, ArrowLeft, Loader2, Check } from 'lucide-react';
 import Navigation from "@/components/ui/navigation";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +22,10 @@ interface BookDetailsData {
   title: string;
   author: string;
   genre: string;
+  cover_url?: string;
+}
+
+interface CurrentOwnerData {
   city: string;
   neighborhood?: string;
   district?: string;
@@ -29,7 +33,6 @@ interface BookDetailsData {
   notes: string;
   tags: string[];
   created_at: string;
-  cover_url?: string;
   profile: {
     username: string;
     display_name: string | null;
@@ -41,15 +44,15 @@ const BookDetails: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [book, setBook] = useState<BookDetailsData | null>(null);
+  const [currentOwner, setCurrentOwner] = useState<CurrentOwnerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showOwnersModal, setShowOwnersModal] = useState(false);
 
   // Fetch journey data for this book
   const { journeyPoints, loading: journeyLoading } = useBookJourney(book?.title, book?.author);
   const { isBookFollowed, toggleFollow } = useFollowingBooks();
   const { followersCount, totalComments, totalReactions } = useBookStats(book?.title, book?.author);
-  const { stories, loading: storiesLoading } = useBookStories(book?.title, book?.author);
+  const { stories, ownerUserIds, loading: storiesLoading } = useBookStories(book?.title, book?.author);
 
   const handleGoBack = () => {
     const from = (location.state as any)?.from as string | undefined;
@@ -97,33 +100,57 @@ const BookDetails: React.FC = () => {
           throw fetchError;
         }
 
-        // Fetch profile separately
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('username, display_name')
-          .eq('user_id', data.user_id)
-          .single();
-
+        // Set book info (title, author, genre, cover)
         setBook({
           id: data.id,
           title: data.title,
           author: data.author,
           genre: data.genre || 'Unknown',
-          city: data.city || 'Unknown',
-          neighborhood: data.neighborhood,
-          district: data.district,
-          formatted_address: data.formatted_address,
-          notes: data.notes || '',
-          tags: data.tags || [],
-          created_at: data.created_at,
           cover_url: data.cover_url,
-          profile: {
-            username: profileData?.username || 'unknown',
-            display_name: profileData?.display_name || 'Unknown User'
-          }
         });
 
-        // Note: Following status is handled by useFollowingBooks hook
+        // Fetch the CURRENT (most recent) owner of this book
+        const { data: currentOwnerData } = await supabase
+          .from('user_books')
+          .select(`
+            id,
+            city,
+            neighborhood,
+            district,
+            formatted_address,
+            created_at,
+            notes,
+            tags,
+            user_id
+          `)
+          .eq('title', data.title)
+          .eq('author', data.author)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (currentOwnerData) {
+          // Fetch current owner's profile
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('username, display_name')
+            .eq('user_id', currentOwnerData.user_id)
+            .maybeSingle();
+
+          setCurrentOwner({
+            city: currentOwnerData.city || 'Unknown',
+            neighborhood: currentOwnerData.neighborhood,
+            district: currentOwnerData.district,
+            formatted_address: currentOwnerData.formatted_address,
+            notes: currentOwnerData.notes || '',
+            tags: currentOwnerData.tags || [],
+            created_at: currentOwnerData.created_at,
+            profile: {
+              username: ownerProfile?.username || 'unknown',
+              display_name: ownerProfile?.display_name || 'Unknown User'
+            }
+          });
+        }
       } catch (err) {
         console.error('Error fetching book details:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch book details');
@@ -246,74 +273,76 @@ const BookDetails: React.FC = () => {
             </div>
             
             {/* Current Owner Section */}
-            <div className="card p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-serif font-semibold mb-3 sm:mb-4">Current Owner</h2>
-              <div className="bg-gradient-to-r from-muted/30 to-muted/50 rounded-lg border border-border/50 hover:border-primary/20 transition-colors p-4 sm:p-5">
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-lg sm:text-xl shadow-sm flex-shrink-0">
-                    {(book.profile.display_name || book.profile.username)[0].toUpperCase()}
+            {currentOwner && (
+              <div className="card p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold mb-3 sm:mb-4">Current Owner</h2>
+                <div className="bg-gradient-to-r from-muted/30 to-muted/50 rounded-lg border border-border/50 hover:border-primary/20 transition-colors p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-lg sm:text-xl shadow-sm flex-shrink-0">
+                      {(currentOwner.profile.display_name || currentOwner.profile.username)[0].toUpperCase()}
+                    </div>
+                    
+                    <div className="flex-1 text-center sm:text-left">
+                      <Link 
+                        to={`/profile/${currentOwner.profile.username}`} 
+                        className="text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors block hover:underline break-words"
+                      >
+                        {currentOwner.profile.display_name || currentOwner.profile.username}
+                      </Link>
+                      <p className="text-sm text-muted-foreground mt-1">Book Owner</p>
+                    </div>
                   </div>
                   
-                  <div className="flex-1 text-center sm:text-left">
-                    <Link 
-                      to={`/profile/${book.profile.username}`} 
-                      className="text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors block hover:underline break-words"
-                    >
-                      {book.profile.display_name || book.profile.username}
-                    </Link>
-                    <p className="text-sm text-muted-foreground mt-1">Book Owner</p>
+                  <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t border-border/30">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={16} className="text-primary/70" />
+                        <span className="text-sm font-medium text-muted-foreground">Current Location</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground ml-6 leading-relaxed break-words">
+                        {[currentOwner.neighborhood, currentOwner.city, currentOwner.district].filter(Boolean).join(', ') || currentOwner.formatted_address || 'Unknown Location'}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-primary/70" />
+                        <span className="text-sm font-medium text-muted-foreground">Owned Since</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground ml-6">
+                        {new Date(currentOwner.created_at).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t border-border/30">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={16} className="text-primary/70" />
-                      <span className="text-sm font-medium text-muted-foreground">Current Location</span>
-                    </div>
-                    <p className="text-sm font-semibold text-foreground ml-6 leading-relaxed break-words">
-                      {[book.neighborhood, book.city, book.district].filter(Boolean).join(', ') || book.formatted_address || 'Unknown Location'}
+                {currentOwner.notes && (
+                  <div className="mt-3 sm:mt-4">
+                    <h3 className="font-medium mb-2">Owner's Story</h3>
+                    <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg leading-relaxed break-words">
+                      "{currentOwner.notes}"
                     </p>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-primary/70" />
-                      <span className="text-sm font-medium text-muted-foreground">Owned Since</span>
+                )}
+                
+                {currentOwner.tags && currentOwner.tags.length > 0 && (
+                  <div className="mt-3 sm:mt-4">
+                    <h3 className="font-medium mb-2">Tags</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {currentOwner.tags.map((tag, index) => (
+                        <span key={index} className="inline-block bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs break-words">
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                    <p className="text-sm font-semibold text-foreground ml-6">
-                      {new Date(book.created_at).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </p>
                   </div>
-                </div>
+                )}
               </div>
-              
-              {book.notes && (
-                <div className="mt-3 sm:mt-4">
-                  <h3 className="font-medium mb-2">Owner's Story</h3>
-                  <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg leading-relaxed break-words">
-                    "{book.notes}"
-                  </p>
-                </div>
-              )}
-              
-              {book.tags && book.tags.length > 0 && (
-                <div className="mt-3 sm:mt-4">
-                  <h3 className="font-medium mb-2">Tags</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {book.tags.map((tag, index) => (
-                      <span key={index} className="inline-block bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs break-words">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </motion.div>
           
           {/* Main content - Enhanced Journey Experience */}
@@ -374,6 +403,7 @@ const BookDetails: React.FC = () => {
                       <BookStoryTimeline 
                         entries={stories}
                         loading={storiesLoading}
+                        allowedUserIds={ownerUserIds}
                       />
                     </div>
                   </TabsContent>

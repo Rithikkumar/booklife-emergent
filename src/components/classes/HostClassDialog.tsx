@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, Clock, Users, Video, Copy, Check, Save, X, Link } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import TagList from "@/components/common/TagList";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ const HostClassDialog: React.FC<HostClassDialogProps> = ({ children }) => {
     tags: [] as string[],
     platform: '',
     meetingLink: '',
+    showParticipantCount: true,
   });
   const [selectedBook, setSelectedBook] = useState<{ title: string; author: string; coverUrl?: string }>({ title: "", author: "" });
   const [newTag, setNewTag] = useState('');
@@ -196,7 +198,8 @@ const HostClassDialog: React.FC<HostClassDialogProps> = ({ children }) => {
           max_participants: parseInt(formData.maxParticipants) || 20,
           platform: formData.platform,
           platform_join_url: formData.meetingLink,
-          status: 'scheduled'
+          status: 'scheduled',
+          show_participant_count: formData.showParticipantCount
         })
         .select()
         .single();
@@ -222,6 +225,7 @@ const HostClassDialog: React.FC<HostClassDialogProps> = ({ children }) => {
         tags: [],
         platform: '',
         meetingLink: '',
+        showParticipantCount: true,
       });
       setSelectedBook({ title: "", author: "" });
       setOpen(false);
@@ -513,6 +517,21 @@ const HostClassDialog: React.FC<HostClassDialogProps> = ({ children }) => {
                     onChange={(e) => handleInputChange('maxParticipants', e.target.value)}
                   />
                 </div>
+              </div>
+
+              {/* Show Participant Count Toggle */}
+              <div className="flex items-center justify-between py-2 border-t">
+                <div>
+                  <Label htmlFor="showParticipantCount" className="cursor-pointer">Show participant count publicly</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    When enabled, the number of registered participants will be visible to everyone
+                  </p>
+                </div>
+                <Switch
+                  id="showParticipantCount"
+                  checked={formData.showParticipantCount}
+                  onCheckedChange={(checked) => handleInputChange('showParticipantCount', checked)}
+                />
               </div>
             </CardContent>
           </Card>

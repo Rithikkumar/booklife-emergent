@@ -36,7 +36,7 @@ const Navigation = () => {
               <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Book Passing
+              BookPassing
             </h1>
           </Link>
 
@@ -100,7 +100,7 @@ const Navigation = () => {
                       Sign In
                     </Button>
                     <Button className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300">
-                      Join Book Passing
+                      Join BookPassing
                     </Button>
                   </div>
                 </div>

@@ -43,23 +43,36 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
     const fetchOtherParticipant = async () => {
       if (!currentUserId) return;
 
-      const { data: conversation } = await supabase
+      // Step 1: Fetch the conversation without foreign key joins
+      const { data: conversation, error: convError } = await supabase
         .from('conversations')
-        .select(`
-          participant_1_id,
-          participant_2_id,
-          participant_1:profiles!conversations_participant_1_id_fkey(*),
-          participant_2:profiles!conversations_participant_2_id_fkey(*)
-        `)
+        .select('participant_1_id, participant_2_id')
         .eq('id', conversationId)
-        .single();
+        .maybeSingle();
 
-      if (conversation) {
-        const otherUser = conversation.participant_1_id === currentUserId
-          ? conversation.participant_2
-          : conversation.participant_1;
-        setOtherParticipant(otherUser);
+      if (convError || !conversation) {
+        console.error('Error fetching conversation:', convError);
+        return;
       }
+
+      // Step 2: Determine the other participant's ID
+      const otherUserId = conversation.participant_1_id === currentUserId
+        ? conversation.participant_2_id
+        : conversation.participant_1_id;
+
+      // Step 3: Fetch the other participant's profile separately
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', otherUserId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
+
+      setOtherParticipant(profileData);
     };
 
     fetchOtherParticipant();

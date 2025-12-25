@@ -1,3 +1,5 @@
+import { validateNominatimResponse, type ValidatedNominatimResult } from '@/utils/apiValidation';
+
 export interface LocationData {
   neighborhood?: string;
   district?: string;
@@ -8,27 +10,6 @@ export interface LocationData {
   stateCode?: string;
   coordinates: [number, number];
   formattedAddress: string;
-}
-
-interface NominatimResult {
-  lat: string;
-  lon: string;
-  display_name: string;
-  address?: {
-    neighbourhood?: string;
-    suburb?: string;
-    district?: string;
-    city?: string;
-    town?: string;
-    village?: string;
-    county?: string;
-    state?: string;
-    country?: string;
-    country_code?: string;
-    state_district?: string;
-    municipality?: string;
-    hamlet?: string;
-  };
 }
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
@@ -84,7 +65,9 @@ export const searchLocations = async (query: string): Promise<LocationData[]> =>
     
     console.log('✅ API response received successfully');
 
-    let allResults: NominatimResult[] = await response.json();
+    const rawResults = await response.json();
+    // Validate API response
+    let allResults: ValidatedNominatimResult[] = validateNominatimResponse(rawResults);
 
     // Only try fallback strategies if primary search returns no results
     if (allResults.length === 0) {
@@ -101,7 +84,8 @@ export const searchLocations = async (query: string): Promise<LocationData[]> =>
         );
 
         if (fallbackResponse.ok) {
-          const results: NominatimResult[] = await fallbackResponse.json();
+          const rawFallbackResults = await fallbackResponse.json();
+          const results = validateNominatimResponse(rawFallbackResults);
           if (results.length > 0) {
             allResults = results;
             break;

@@ -268,19 +268,25 @@
   }
   
   .print-only {
-    display: flex !important;
+    display: block !important;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: white;
-    justify-content: center;
-    align-items: center;
+    padding: 0.5in;
   }
   
+  /* Default A4 page for regular printers */
   @page {
-    size: 3in 3in;
+    size: A4;
+    margin: 0.5in;
+  }
+
+  /* Label printer page - small sticker size */
+  @page label-print {
+    size: 2.25in 2.25in;
     margin: 0;
   }
   
@@ -290,149 +296,199 @@
   }
   
   html, body {
-    width: 3in;
-    height: 3in;
+    width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+  }
+
+  /* A4 mode - Cut guide container */
+  .print-a4-mode .sticker-wrapper {
+    display: inline-block;
+    padding: 8px;
+    border: 1px dashed #999;
+    position: relative;
+  }
+
+  .print-a4-mode .sticker-wrapper::before {
+    content: "✂ Cut along dotted line";
+    position: absolute;
+    top: -18px;
+    left: 0;
+    font-size: 9px;
+    color: #666;
+    font-family: Arial, sans-serif;
+  }
+
+  /* Label printer mode - ticket-sized, no A4 page */
+  .print-label-mode.print-only {
+    page: label-print;
+    width: 2.25in !important;
+    height: 2.25in !important;
+    padding: 0.125in !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+  }
+
+  .print-label-mode .sticker-wrapper {
+    display: inline-block;
+    padding: 0;
+    border: none;
+    position: relative;
+  }
+
+  .print-label-mode .sticker-wrapper::before {
+    display: none;
+  }
+
+  .print-label-mode .sticker-print {
+    width: 2in;
+    height: 2in;
+    margin: 0;
   }
   
   .sticker-print {
-    width: 3in;
-    height: 3in;
+    width: 2in;
+    height: 2in;
     background: linear-gradient(135deg, #f5ede4 0%, #e8dcc8 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 10px;
     position: relative;
-    border: 3px solid #5a4a3a;
-    border-radius: 16px;
-    box-shadow: inset 0 2px 8px rgba(90, 74, 58, 0.1);
+    border: 2px solid #5a4a3a;
+    border-radius: 10px;
+    box-shadow: inset 0 1px 4px rgba(90, 74, 58, 0.1);
   }
   
   .decorative-corner {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #c9a876;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #c9a876;
   }
   
   .corner-tl {
-    top: 8px;
-    left: 8px;
+    top: 5px;
+    left: 5px;
     border-right: none;
     border-bottom: none;
-    border-radius: 8px 0 0 0;
+    border-radius: 5px 0 0 0;
   }
   
   .corner-tr {
-    top: 8px;
-    right: 8px;
+    top: 5px;
+    right: 5px;
     border-left: none;
     border-bottom: none;
-    border-radius: 0 8px 0 0;
+    border-radius: 0 5px 0 0;
   }
   
   .corner-bl {
-    bottom: 8px;
-    left: 8px;
+    bottom: 5px;
+    left: 5px;
     border-right: none;
     border-top: none;
-    border-radius: 0 0 0 8px;
+    border-radius: 0 0 0 5px;
   }
   
   .corner-br {
-    bottom: 8px;
-    right: 8px;
+    bottom: 5px;
+    right: 5px;
     border-left: none;
     border-top: none;
-    border-radius: 0 0 8px 0;
+    border-radius: 0 0 5px 0;
   }
   
   .sticker-print .header {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
   }
   
   .sticker-print .logo-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: 4px;
+    margin-bottom: 2px;
   }
   
   .sticker-print .book-icon {
-    width: 24px;
-    height: 24px;
+    width: 14px;
+    height: 14px;
     stroke: #5a4a3a;
     stroke-width: 2;
     fill: none;
   }
   
   .sticker-print .logo {
-    font-size: 16px;
+    font-size: 10px;
     font-weight: bold;
     color: #5a4a3a;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
   }
   
   .sticker-print .tagline {
-    font-size: 8px;
+    font-size: 5px;
     color: #8b7355;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     text-transform: uppercase;
   }
   
   .sticker-print .qr-container {
     background: white;
-    padding: 8px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(90, 74, 58, 0.15);
-    border: 2px solid #c9a876;
-    margin: 8px 0;
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(90, 74, 58, 0.15);
+    border: 1.5px solid #c9a876;
+    margin: 4px 0;
   }
   
   .sticker-print .qr-code {
-    width: 100px;
-    height: 100px;
+    width: 60px;
+    height: 60px;
     display: block;
   }
   
   .sticker-print .code-section {
     text-align: center;
     background: linear-gradient(135deg, #5a4a3a 0%, #6d5a47 100%);
-    padding: 8px 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(90, 74, 58, 0.25);
-    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 5px;
+    box-shadow: 0 1px 4px rgba(90, 74, 58, 0.25);
+    margin-top: 4px;
     width: 100%;
-    max-width: 200px;
+    max-width: 120px;
   }
   
   .sticker-print .code-label {
-    font-size: 7px;
+    font-size: 5px;
     color: #e8dcc8;
-    margin-bottom: 3px;
-    letter-spacing: 1px;
+    margin-bottom: 1px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
   }
   
   .sticker-print .code {
     font-family: 'Courier New', monospace;
-    font-size: 14px;
+    font-size: 9px;
     font-weight: bold;
     color: #f5ede4;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
   }
   
   .sticker-print .footer {
-    font-size: 7px;
+    font-size: 5px;
     color: #8b7355;
     text-align: center;
-    margin-top: 10px;
-    letter-spacing: 0.5px;
+    margin-top: 5px;
+    letter-spacing: 0.3px;
   }
 }

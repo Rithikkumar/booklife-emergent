@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, MapPin, User, MessageCircle, Heart, Laugh, Zap, Frown, Edit, Save, X } from 'lucide-react';
+import { Clock, MapPin, Edit, Save, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ interface StoryCardProps {
   bookId: string;
   entry: StoryEntry;
   showComments?: boolean;
+  allowedUserIds?: string[];
 }
 
 // EditButton component for conditional rendering
@@ -63,7 +64,7 @@ const EditButton: React.FC<{ entryUserId?: string; onEdit: () => void }> = ({ en
   );
 };
 
-const StoryCard: React.FC<StoryCardProps> = ({ bookId, entry, showComments = false }) => {
+const StoryCard: React.FC<StoryCardProps> = ({ bookId, entry, showComments = false, allowedUserIds }) => {
   const [showCommentsSection, setShowCommentsSection] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedNotes, setEditedNotes] = useState(entry.notes);
@@ -206,9 +207,8 @@ const StoryCard: React.FC<StoryCardProps> = ({ bookId, entry, showComments = fal
                 onClick={() => setShowCommentsSection(!showCommentsSection)}
                 className="text-muted-foreground hover:text-foreground"
               >
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <span className="mr-1">💬</span>
                 <span className="hidden xs:inline">Comments</span>
-                <span className="xs:hidden">💬</span>
               </Button>
             )}
           </div>
@@ -222,7 +222,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ bookId, entry, showComments = fal
             exit={{ opacity: 0, height: 0 }}
             className="mt-4 pt-4 border-t border-border/50"
           >
-            <StoryComments bookId={bookId} />
+            <StoryComments bookId={bookId} allowedUserIds={allowedUserIds} />
           </motion.div>
         )}
       </div>

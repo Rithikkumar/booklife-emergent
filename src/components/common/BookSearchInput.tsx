@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Book, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { validateOpenLibraryResponse, isAllowedImageUrl } from '@/utils/apiValidation';
 
 interface BookSearchResult {
   key: string;
@@ -53,7 +54,7 @@ const BookSearchInput: React.FC<BookSearchInputProps> = ({
   const searchTimeout = useRef<NodeJS.Timeout>();
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Search OpenLibrary API
+  // Search OpenLibrary API with validation
   const searchBooks = async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -65,8 +66,10 @@ const BookSearchInput: React.FC<BookSearchInputProps> = ({
       const response = await fetch(
         `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=8&fields=key,title,author_name,cover_i,first_publish_year`
       );
-      const data = await response.json();
-      setSearchResults(data.docs || []);
+      const rawData = await response.json();
+      // Validate API response to prevent malformed data
+      const validatedData = validateOpenLibraryResponse(rawData);
+      setSearchResults(validatedData.docs as BookSearchResult[]);
       setShowResults(true);
     } catch (error) {
       console.error('Error searching books:', error);
@@ -97,10 +100,17 @@ const BookSearchInput: React.FC<BookSearchInputProps> = ({
 
   // Handle book selection from results
   const handleBookSelect = (book: BookSearchResult) => {
+    // Build and validate cover URL
+    let coverUrl: string | undefined;
+    if (book.cover_i) {
+      const candidateUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`;
+      coverUrl = isAllowedImageUrl(candidateUrl) ? candidateUrl : undefined;
+    }
+
     const bookData: BookData = {
       title: book.title,
       author: book.author_name?.[0] || '',
-      coverUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : undefined
+      coverUrl
     };
 
     setSelectedBook(bookData);

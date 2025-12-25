@@ -53,43 +53,73 @@ export const useDirectMessages = (conversationId?: string) => {
   // Fetch messages for a specific conversation
   const fetchMessages = useCallback(async (conversationId: string, offset = 0) => {
     try {
+      // Fetch messages without foreign key join
       const { data: messagesData, error: messagesError } = await supabase
         .from('direct_messages')
-        .select(`
-          *,
-          sender:profiles!direct_messages_sender_id_fkey(user_id, username, display_name, profile_picture_url)
-        `)
+        .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: false })
         .range(offset, offset + MESSAGES_PER_PAGE - 1);
 
       if (messagesError) throw messagesError;
 
-      // Fetch reply messages if needed
-      const messagesWithReplies = await Promise.all(
+      // Get unique sender IDs
+      const senderIds = [...new Set((messagesData || []).map(m => m.sender_id))];
+      
+      // Fetch sender profiles separately
+      let profileMap = new Map<string, any>();
+      if (senderIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, username, display_name, profile_picture_url')
+          .in('user_id', senderIds);
+        
+        profileMap = new Map((profilesData || []).map(p => [p.user_id, p]));
+      }
+
+      // Map profiles to messages and fetch replies
+      const messagesWithDetails = await Promise.all(
         (messagesData || []).map(async (msg) => {
+          const messageWithSender = {
+            ...msg,
+            sender: profileMap.get(msg.sender_id)
+          };
+
           if (msg.reply_to_id) {
             const { data: replyData } = await supabase
               .from('direct_messages')
-              .select(`
-                *,
-                sender:profiles!direct_messages_sender_id_fkey(user_id, username, display_name, profile_picture_url)
-              `)
+              .select('*')
               .eq('id', msg.reply_to_id)
-              .single();
+              .maybeSingle();
             
-            return { ...msg, reply_to: replyData };
+            if (replyData) {
+              // Fetch reply sender profile if not already in map
+              let replySender = profileMap.get(replyData.sender_id);
+              if (!replySender) {
+                const { data: replySenderData } = await supabase
+                  .from('profiles')
+                  .select('user_id, username, display_name, profile_picture_url')
+                  .eq('user_id', replyData.sender_id)
+                  .maybeSingle();
+                replySender = replySenderData;
+              }
+              
+              return { 
+                ...messageWithSender, 
+                reply_to: { ...replyData, sender: replySender } 
+              };
+            }
           }
-          return msg;
+          return messageWithSender;
         })
       );
 
       setHasMore((messagesData || []).length === MESSAGES_PER_PAGE);
       
       if (offset === 0) {
-        setMessages(messagesWithReplies.reverse() as unknown as DirectMessage[]);
+        setMessages(messagesWithDetails.reverse() as unknown as DirectMessage[]);
       } else {
-        setMessages(prev => [...messagesWithReplies.reverse() as unknown as DirectMessage[], ...prev]);
+        setMessages(prev => [...messagesWithDetails.reverse() as unknown as DirectMessage[], ...prev]);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -185,57 +215,68 @@ export const useDirectMessages = (conversationId?: string) => {
     }
   }, []);
 
-  // Add reaction to message
+  // Add reaction to message with optimistic UI (one reaction per user per message)
   const addReaction = useCallback(async (messageId: string, emoji: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      // Fetch current reactions
-      const { data: messageData } = await supabase
-        .from('direct_messages')
-        .select('reactions')
-        .eq('id', messageId)
-        .single();
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
 
-      if (!messageData) return;
-
-      const reactions = (messageData.reactions as any) || {};
-      const userReactions = reactions[emoji] || [];
-
-      let updatedReactions: any;
-      if (userReactions.includes(user.id)) {
-        // Remove reaction
-        updatedReactions = {
-          ...(reactions as object),
-          [emoji]: userReactions.filter((id: string) => id !== user.id)
-        };
-        // Remove empty emoji arrays
-        if (updatedReactions[emoji].length === 0) {
-          delete updatedReactions[emoji];
-        }
-      } else {
-        // Add reaction
-        updatedReactions = {
-          ...(reactions as object),
-          [emoji]: [...userReactions, user.id]
-        };
+    const currentReactions = (message.reactions as Record<string, string[]>) || {};
+    
+    // Check if user already has THIS emoji reaction (for toggle-off)
+    const userHasThisReaction = (currentReactions[emoji] || []).includes(user.id);
+    
+    // Build new reactions: first remove user from ALL emoji types
+    let newReactions: Record<string, string[]> = {};
+    for (const [existingEmoji, userIds] of Object.entries(currentReactions)) {
+      const filteredIds = (userIds as string[]).filter(id => id !== user.id);
+      if (filteredIds.length > 0) {
+        newReactions[existingEmoji] = filteredIds;
       }
+    }
+    
+    // Add the new reaction (unless toggling off the same emoji)
+    if (!userHasThisReaction) {
+      newReactions[emoji] = [...(newReactions[emoji] || []), user.id];
+    }
 
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, reactions: newReactions }
+        : msg
+    ));
+
+    try {
       const { error } = await supabase
         .from('direct_messages')
-        .update({ reactions: updatedReactions })
+        .update({ reactions: newReactions })
         .eq('id', messageId);
 
       if (error) throw error;
     } catch (error) {
       console.error('Error adding reaction:', error);
+      // Rollback: Restore original reactions
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, reactions: currentReactions }
+          : msg
+      ));
       toast.error('Failed to add reaction');
     }
-  }, []);
+  }, [messages]);
 
-  // Delete a message
+  // Delete a message with optimistic update
   const deleteMessage = useCallback(async (messageId: string) => {
+    // Store the message in case we need to restore it
+    const messageToDelete = messages.find(m => m.id === messageId);
+    if (!messageToDelete) return;
+
+    // Optimistically remove from UI
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+
     try {
       const { error } = await supabase
         .from('direct_messages')
@@ -246,9 +287,13 @@ export const useDirectMessages = (conversationId?: string) => {
       toast.success('Message deleted');
     } catch (error) {
       console.error('Error deleting message:', error);
-      toast.error('Failed to delete message');
+      // Restore the message on error
+      setMessages(prev => [...prev, messageToDelete].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      ));
+      toast.error('Failed to delete message. You can only delete messages within 1 hour.');
     }
-  }, []);
+  }, [messages]);
 
   // Mark messages as read
   const markAsRead = useCallback(async (conversationId: string) => {

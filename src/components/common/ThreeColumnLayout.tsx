@@ -8,6 +8,7 @@ interface ThreeColumnLayoutProps {
   leftColSpan?: number;
   centerColSpan?: number;
   rightColSpan?: number;
+  hideLeftOnMobile?: boolean;
 }
 
 const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
@@ -16,7 +17,8 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   rightSidebar,
   leftColSpan = 3,
   centerColSpan = 6,
-  rightColSpan = 3
+  rightColSpan = 3,
+  hideLeftOnMobile = false
 }) => {
   // Use fixed classes instead of dynamic ones for Tailwind CSS
   const getLeftColClass = () => {
@@ -55,8 +57,8 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         {centerContent}
       </div>
       
-      {/* Left sidebar stacked below on mobile/tablet, sticky on desktop */}
-      <div className={`order-2 lg:order-1 min-w-0 ${getLeftColClass()} max-w-full lg:max-w-sm`}>
+      {/* Left sidebar - hidden on mobile if hideLeftOnMobile is true */}
+      <div className={`${hideLeftOnMobile ? 'hidden lg:block' : ''} order-2 lg:order-1 min-w-0 ${getLeftColClass()} max-w-full lg:max-w-sm`}>
         <div className="lg:sticky lg:top-24 pb-2 lg:pb-0">
           {leftSidebar}
         </div>

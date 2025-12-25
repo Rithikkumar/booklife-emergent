@@ -21,14 +21,18 @@ interface Comment {
 
 interface StoryCommentsProps {
   bookId: string;
+  allowedUserIds?: string[];
 }
 
-const StoryComments: React.FC<StoryCommentsProps> = ({ bookId }) => {
+const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Check if current user is allowed to comment (must be a book owner)
+  const canComment = currentUserId && (!allowedUserIds || allowedUserIds.length === 0 || allowedUserIds.includes(currentUserId));
 
   useEffect(() => {
     fetchComments();
@@ -199,8 +203,8 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId }) => {
         </div>
       )}
 
-      {/* Add comment form */}
-      {currentUserId && (
+      {/* Add comment form - only for book owners */}
+      {currentUserId && canComment && (
         <form onSubmit={handleSubmitComment} className="flex gap-3">
           <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-xs">
             ?
@@ -223,6 +227,12 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId }) => {
             </Button>
           </div>
         </form>
+      )}
+
+      {currentUserId && !canComment && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Only book owners can comment on this story
+        </p>
       )}
 
       {!currentUserId && (

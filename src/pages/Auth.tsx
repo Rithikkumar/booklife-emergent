@@ -96,8 +96,9 @@ const Auth: React.FC = () => {
         toast.success('Signed in successfully!');
         rateLimiter.reset(rateLimitKey);
         
-        // Navigate to intended page or explore
-        const from = location.state?.from || '/explore';
+        // Navigate to redirect param, state, or default explore
+        const redirectParam = searchParams.get('redirect');
+        const from = redirectParam || location.state?.from || '/explore';
         navigate(from);
         return;
       }
@@ -134,8 +135,9 @@ const Auth: React.FC = () => {
       toast.success('Signed in successfully!');
       rateLimiter.reset(rateLimitKey);
       
-      // Navigate to intended page or explore
-      const from = location.state?.from || '/explore';
+      // Navigate to redirect param, state, or default explore
+      const redirectParam = searchParams.get('redirect');
+      const from = redirectParam || location.state?.from || '/explore';
       navigate(from);
     } catch (error) {
       const errorInfo = handleAuthError(error);
@@ -181,7 +183,11 @@ const Auth: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      // Use redirect param for email confirmation, otherwise default to origin
+      const redirectParam = searchParams.get('redirect');
+      const redirectUrl = redirectParam 
+        ? `${window.location.origin}${redirectParam}` 
+        : `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
         email: sanitizedEmail,

@@ -7,14 +7,20 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     scrollEnabled: true,
-    allowsLinkPreview: false
+    allowsLinkPreview: false,
+    preferredContentMode: 'mobile'
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0
+      launchShowDuration: 0,
+      launchAutoHide: true
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
     }
   }
 };

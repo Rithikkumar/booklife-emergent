@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import HostClassDialog from "@/components/classes/HostClassDialog";
+import ClassesSidebar, { ClassSection } from "@/components/classes/ClassesSidebar";
+import ClassCard from "@/components/classes/ClassCard";
+import ClassStatsCard from "@/components/classes/ClassStatsCard";
+import ThreeColumnLayout from "@/components/common/ThreeColumnLayout";
+import MobileSectionTabs from "@/components/common/MobileSectionTabs";
+import ScrollRestoreLayout from "@/components/common/ScrollRestoreLayout";
 import { useLiveClasses } from "@/hooks/useLiveClasses";
 import { useUserClassStats } from "@/hooks/useUserClassStats";
-import { useBookClassesSearch, ClassFilterType } from "@/hooks/useBookClassesSearch";
-import { formatDistanceToNow } from "date-fns";
+import { useAllBookClasses } from "@/hooks/useAllBookClasses";
+import { ClassFilterType } from "@/hooks/useBookClassesSearch";
+import { useMyHostedClasses } from "@/hooks/useMyHostedClasses";
+import { useMyJoinedClasses } from "@/hooks/useMyJoinedClasses";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -21,581 +28,466 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   Video, 
-  Clock, 
-  Users, 
-  Star, 
-  Calendar,
-  BookOpen,
-  Mic,
-  Play,
-  ExternalLink,
   Search,
-  X,
-  TrendingUp,
-  Globe,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Mic,
+  BookOpen,
+  Users,
+  Radio,
+  Calendar,
+  FolderOpen,
+  CheckCircle,
+  LayoutGrid
 } from "lucide-react";
 
 const BookClasses = () => {
   const navigate = useNavigate();
-  const { liveClasses, loading: classesLoading, joinClass } = useLiveClasses();
+  const [activeSection, setActiveSection] = useState<ClassSection>('all');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  const { liveClasses, loading: liveLoading, joinClass } = useLiveClasses();
   const { stats, loading: statsLoading } = useUserClassStats();
+  const { classes: hostedClasses, loading: hostedLoading } = useMyHostedClasses();
+  const { classes: joinedClasses, loading: joinedLoading } = useMyJoinedClasses();
   const { 
-    classes: searchedClasses, 
-    loading: searchLoading, 
+    classes: allClasses, 
+    loading: allLoading, 
     searchQuery, 
-    activeFilters, 
-    handleSearch, 
-    handleFilterToggle, 
-    clearFilters 
-  } = useBookClassesSearch();
+    handleSearch,
+  } = useAllBookClasses();
+  
+  // Create a set of joined class IDs for quick lookup
+  const joinedClassIds = new Set(joinedClasses.map(c => c.id));
+  // Create a set of hosted class IDs for quick lookup
+  const hostedClassIds = new Set(hostedClasses.map(c => c.id));
+  
+  const [activeFilters, setActiveFilters] = useState<ClassFilterType[]>([]);
+  
+  const handleFilterToggle = (filter: ClassFilterType) => {
+    setActiveFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+  
+  const clearFilters = () => {
+    setActiveFilters([]);
+    handleSearch('');
+  };
 
-  const handleJoinClass = async (classId: string, joinUrl?: string, isLiveClass?: boolean) => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Use getSession for faster cached check
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session?.user);
+      setCurrentUserId(session?.user?.id || null);
+      setIsCheckingAuth(false);
+    };
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsAuthenticated(!!session?.user);
+      setCurrentUserId(session?.user?.id || null);
+      setIsCheckingAuth(false);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleJoinClass = async (classId: string, joinUrl?: string, isLive?: boolean) => {
     const success = await joinClass(classId);
-    if (success && isLiveClass && joinUrl) {
+    if (success && isLive && joinUrl) {
       window.open(joinUrl, '_blank');
     }
   };
 
-  const handleCardClick = (classId: string, e: React.MouseEvent) => {
-    // Prevent navigation if clicking on buttons
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('[role="button"]')) {
-      return;
-    }
-    navigate(`/class/${classId}`);
-  };
-
-  const formatScheduledTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    
-    if (date > now) {
-      return `Starting ${formatDistanceToNow(date, { addSuffix: true })}`;
-    } else {
-      return `Started ${formatDistanceToNow(date, { addSuffix: true })}`;
-    }
-  };
-
   const mainFilterOptions = [
-    { key: 'trending' as ClassFilterType, label: 'Trending', icon: TrendingUp },
-    { key: 'live-now' as ClassFilterType, label: 'Live Now', icon: Video },
-    { key: 'writing' as ClassFilterType, label: 'Writing', icon: null },
-    { key: 'analysis' as ClassFilterType, label: 'Analysis', icon: null },
-    { key: 'discussion' as ClassFilterType, label: 'Discussion', icon: null },
-    { key: 'creative' as ClassFilterType, label: 'Creative', icon: null },
-    { key: 'literature' as ClassFilterType, label: 'Literature', icon: null },
-    { key: 'fiction' as ClassFilterType, label: 'Fiction', icon: null },
+    { key: 'trending' as ClassFilterType, label: 'Trending' },
+    { key: 'writing' as ClassFilterType, label: 'Writing' },
+    { key: 'analysis' as ClassFilterType, label: 'Analysis' },
+    { key: 'discussion' as ClassFilterType, label: 'Discussion' },
+    { key: 'creative' as ClassFilterType, label: 'Creative' },
+    { key: 'literature' as ClassFilterType, label: 'Literature' },
+    { key: 'fiction' as ClassFilterType, label: 'Fiction' },
   ];
 
   const moreFilterOptions = [
-    { key: 'publishing' as ClassFilterType, label: 'Publishing', icon: null },
-    { key: 'non-fiction' as ClassFilterType, label: 'Non-Fiction', icon: null },
-    { key: 'mystery' as ClassFilterType, label: 'Mystery', icon: null },
-    { key: 'romance' as ClassFilterType, label: 'Romance', icon: null },
-    { key: 'science-fiction' as ClassFilterType, label: 'Sci-Fi', icon: null },
-    { key: 'fantasy' as ClassFilterType, label: 'Fantasy', icon: null },
-    { key: 'thriller' as ClassFilterType, label: 'Thriller', icon: null },
-    { key: 'historical-fiction' as ClassFilterType, label: 'Historical Fiction', icon: null },
-    { key: 'biography' as ClassFilterType, label: 'Biography', icon: null },
-    { key: 'self-help' as ClassFilterType, label: 'Self Help', icon: null },
-    { key: 'young-adult' as ClassFilterType, label: 'Young Adult', icon: null },
-    { key: 'children' as ClassFilterType, label: 'Children', icon: null },
-    { key: 'horror' as ClassFilterType, label: 'Horror', icon: null },
-    { key: 'adventure' as ClassFilterType, label: 'Adventure', icon: null },
-    { key: 'poetry' as ClassFilterType, label: 'Poetry', icon: null },
-    { key: 'drama' as ClassFilterType, label: 'Drama', icon: null },
-    { key: 'philosophy' as ClassFilterType, label: 'Philosophy', icon: null },
-    { key: 'psychology' as ClassFilterType, label: 'Psychology', icon: null },
+    { key: 'publishing' as ClassFilterType, label: 'Publishing' },
+    { key: 'non-fiction' as ClassFilterType, label: 'Non-Fiction' },
+    { key: 'mystery' as ClassFilterType, label: 'Mystery' },
+    { key: 'romance' as ClassFilterType, label: 'Romance' },
+    { key: 'science-fiction' as ClassFilterType, label: 'Sci-Fi' },
+    { key: 'fantasy' as ClassFilterType, label: 'Fantasy' },
+    { key: 'thriller' as ClassFilterType, label: 'Thriller' },
+    { key: 'historical-fiction' as ClassFilterType, label: 'Historical Fiction' },
+    { key: 'biography' as ClassFilterType, label: 'Biography' },
+    { key: 'self-help' as ClassFilterType, label: 'Self Help' },
+    { key: 'young-adult' as ClassFilterType, label: 'Young Adult' },
+    { key: 'children' as ClassFilterType, label: 'Children' },
+    { key: 'horror' as ClassFilterType, label: 'Horror' },
+    { key: 'poetry' as ClassFilterType, label: 'Poetry' },
   ];
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="pt-24 md:pt-28 pb-12">
-        <div className="container mx-auto px-4 max-w-6xl">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
-              Book Classes
-            </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Learn from passionate book lovers and literature enthusiasts. Join classes or host your own to share knowledge with the community.
-            </p>
-          </div>
+  // Local search filter for sections that don't use the backend search
+  const filterBySearchQuery = (classes: any[]) => {
+    if (!searchQuery.trim()) return classes;
+    const query = searchQuery.toLowerCase();
+    return classes.filter(c => 
+      c.title?.toLowerCase().includes(query) ||
+      c.book_title?.toLowerCase().includes(query) ||
+      c.book_author?.toLowerCase().includes(query) ||
+      c.host_name?.toLowerCase().includes(query) ||
+      c.host_username?.toLowerCase().includes(query) ||
+      c.description?.toLowerCase().includes(query) ||
+      c.tags?.some((tag: string) => tag.toLowerCase().includes(query))
+    );
+  };
 
-          {/* Create Class Button */}
-          <div className="text-center mb-8">
+  // Get current classes based on active section
+  const getCurrentClasses = () => {
+    let classes;
+    switch (activeSection) {
+      case 'live':
+        // Show classes that are currently live or starting very soon
+        classes = liveClasses.filter(c => c.is_ongoing || c.status === 'live').map(c => ({
+          ...c,
+          is_ongoing: c.is_ongoing,
+          host_name: c.host_name,
+          host_username: c.host_username
+        }));
+        return filterBySearchQuery(classes);
+      case 'upcoming':
+        // Show all scheduled classes that are in the future
+        classes = allClasses.filter(c => {
+          // Must be in scheduled status (not live, ended, draft)
+          if (c.status !== 'scheduled') return false;
+          // If there's a scheduled date, it must be in the future
+          if (c.scheduled_date) {
+            return new Date(c.scheduled_date) > new Date();
+          }
+          // Classes without scheduled_date but in scheduled status are still upcoming (TBD)
+          return true;
+        });
+        return classes; // Already filtered by backend search
+      case 'hosted':
+        classes = hostedClasses.map(c => ({ ...c, host_name: 'You', host_username: '' }));
+        return filterBySearchQuery(classes);
+      case 'joined':
+        return filterBySearchQuery(joinedClasses);
+      case 'all':
+      default:
+        return allClasses; // Already filtered by backend search
+    }
+  };
+
+  const isLoading = () => {
+    switch (activeSection) {
+      case 'live': return liveLoading;
+      case 'hosted': return hostedLoading;
+      case 'joined': return joinedLoading;
+      default: return allLoading;
+    }
+  };
+
+  const currentClasses = getCurrentClasses();
+  const loading = isLoading();
+
+  const getSectionTitle = () => {
+    switch (activeSection) {
+      case 'live': return 'Live Now';
+      case 'upcoming': return 'Upcoming Classes';
+      case 'hosted': return 'My Hosted Classes';
+      case 'joined': return 'Joined Classes';
+      default: return 'All Classes';
+    }
+  };
+
+  const leftSidebar = (
+    <>
+      <ClassesSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        isAuthenticated={isAuthenticated}
+        isCheckingAuth={isCheckingAuth}
+        liveCount={liveClasses.length}
+        hostedCount={hostedClasses.length}
+        joinedCount={joinedClasses.length}
+      />
+    </>
+  );
+
+  const centerContent = (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            {getSectionTitle()}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {activeSection === 'hosted' 
+              ? 'Manage your classes and view registrations'
+              : activeSection === 'joined'
+              ? 'Classes you\'ve registered for'
+              : 'Discover and join book classes'}
+          </p>
+        </div>
+        <HostClassDialog>
+          <Button className="bg-gradient-primary hover:shadow-glow">
+            <Video className="h-4 w-4 mr-2" />
+            Host a Class
+          </Button>
+        </HostClassDialog>
+      </div>
+
+      {/* Search Bar - show for all sections */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary/70 h-5 w-5 z-10" />
+        <Input
+          placeholder={
+            activeSection === 'hosted' 
+              ? "Search your hosted classes..." 
+              : activeSection === 'joined'
+              ? "Search your joined classes..."
+              : activeSection === 'live'
+              ? "Search live classes..."
+              : "Search classes by title, instructor, book, or tags..."
+          }
+          className="pl-10 h-12 border-2 border-border/60 focus:border-primary/50 bg-background/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 w-full"
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+      </div>
+      {/* Filters - only show for all section */}
+      {activeSection === 'all' && (
+        <div className="flex flex-wrap gap-2">
+          {mainFilterOptions.map((filter) => {
+            const isActive = activeFilters.includes(filter.key);
+            
+            return (
+              <Badge 
+                key={filter.key}
+                variant={isActive ? "secondary" : "outline"} 
+                className={cn(
+                  "cursor-pointer transition-all duration-200",
+                  isActive 
+                    ? "bg-primary text-primary-foreground border-primary shadow-lg scale-105" 
+                    : "hover:bg-primary/10 hover:border-primary hover:text-primary"
+                )}
+                onClick={() => handleFilterToggle(filter.key)}
+              >
+                {filter.label}
+                {isActive && <span className="ml-1 text-xs">✓</span>}
+              </Badge>
+            );
+          })}
+
+          {moreFilterOptions
+            .filter(filter => activeFilters.includes(filter.key))
+            .map((filter) => (
+              <Badge 
+                key={filter.key}
+                variant="secondary"
+                className="cursor-pointer bg-primary text-primary-foreground border-primary shadow-lg scale-105"
+                onClick={() => handleFilterToggle(filter.key)}
+              >
+                {filter.label}
+                <span className="ml-1 text-xs">✓</span>
+              </Badge>
+            ))}
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="rounded-full h-7 px-3 cursor-pointer hover:bg-primary/10 hover:border-primary hover:text-primary"
+              >
+                <Filter className="h-3 w-3 mr-1" />
+                More
+                <ChevronDown className="h-3 w-3 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              side="bottom" 
+              align="end" 
+              sideOffset={8} 
+              className="bg-popover text-popover-foreground border border-border shadow-elegant z-[100] w-48 max-h-64 overflow-y-auto"
+            >
+              {moreFilterOptions.map((filter) => {
+                const isActive = activeFilters.includes(filter.key);
+                
+                return (
+                  <DropdownMenuItem
+                    key={filter.key}
+                    onClick={() => handleFilterToggle(filter.key)}
+                    className={cn(
+                      "cursor-pointer",
+                      isActive && "bg-primary/10 text-primary font-medium"
+                    )}
+                  >
+                    {filter.label}
+                    {isActive && <span className="ml-auto text-xs">✓</span>}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {(activeFilters.length > 0 || searchQuery) && (
+            <Badge 
+              variant="outline" 
+              className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground border-destructive text-destructive"
+              onClick={clearFilters}
+            >
+              Clear All {activeFilters.length > 0 && `(${activeFilters.length})`}
+            </Badge>
+          )}
+        </div>
+      )}
+
+      {/* Classes List */}
+      {loading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className="shadow-card">
+              <CardContent className="p-6">
+                <Skeleton className="h-6 w-3/4 mb-4" />
+                <Skeleton className="h-4 w-1/2 mb-2" />
+                <Skeleton className="h-4 w-full mb-4" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : currentClasses.length > 0 ? (
+        <div className="space-y-4">
+          {currentClasses.map((classItem) => {
+            const isOwner = currentUserId ? (
+              classItem.host_user_id === currentUserId || 
+              hostedClassIds.has(classItem.id)
+            ) : false;
+            const isJoined = joinedClassIds.has(classItem.id);
+            
+            return (
+              <ClassCard
+                key={classItem.id}
+                classItem={classItem}
+                onJoin={!isOwner && !isJoined ? handleJoinClass : undefined}
+                showHost={activeSection !== 'hosted'}
+                isOwner={isOwner}
+                isJoined={isJoined}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">
+            {activeSection === 'hosted' 
+              ? 'No classes hosted yet'
+              : activeSection === 'joined'
+              ? 'No classes joined yet'
+              : 'No classes found'}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {activeSection === 'hosted' 
+              ? 'Start hosting classes to share your knowledge!'
+              : activeSection === 'joined'
+              ? 'Browse available classes and register to get started'
+              : searchQuery || activeFilters.length > 0 
+                ? 'Try adjusting your search or filters'
+                : 'No classes are currently available'}
+          </p>
+          {activeSection === 'hosted' && (
             <HostClassDialog>
               <Button className="bg-gradient-primary hover:shadow-glow">
                 <Video className="h-4 w-4 mr-2" />
-                Host a Class
+                Host Your First Class
               </Button>
             </HostClassDialog>
-          </div>
+          )}
+          {(searchQuery || activeFilters.length > 0) && activeSection === 'all' && (
+            <Button variant="outline" onClick={clearFilters}>
+              Clear Search & Filters
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-8 lg:mb-12">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary/70 h-5 w-5 z-10" />
-              <Input
-                placeholder="Search classes by title, instructor, book, or tags..."
-                className="pl-10 h-12 border-2 border-border/60 focus:border-primary/50 bg-background/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 w-full"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
+  const rightSidebar = (
+    <div className="space-y-6">
+      {/* Stats Card */}
+      {isAuthenticated && (
+        <ClassStatsCard stats={stats} loading={statsLoading} />
+      )}
+
+      {/* Host Benefits */}
+      <div className="bg-gradient-subtle rounded-lg p-6">
+        <h3 className="font-semibold mb-4">Share Your Knowledge</h3>
+        <div className="space-y-4 text-sm">
+          <div className="flex items-start space-x-3">
+            <Mic className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium">Easy Teaching Tools</p>
+              <p className="text-muted-foreground text-xs">Video conferencing and screen sharing</p>
             </div>
           </div>
-
-          {/* Multi-Select Filters */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8 lg:mb-12">
-            {mainFilterOptions.map((filter) => {
-              const Icon = filter.icon;
-              const isActive = activeFilters.includes(filter.key);
-              
-              return (
-                <Badge 
-                  key={filter.key}
-                  variant={isActive ? "secondary" : "outline"} 
-                  className={cn(
-                    "cursor-pointer transition-all duration-200 relative",
-                    isActive 
-                      ? "bg-primary text-primary-foreground border-primary shadow-lg scale-105" 
-                      : "hover:bg-primary/10 hover:border-primary hover:text-primary"
-                  )}
-                  onClick={() => handleFilterToggle(filter.key)}
-                >
-                  {Icon && <Icon className="h-3 w-3 mr-1" />}
-                  {filter.label}
-                  {isActive && <span className="ml-1 text-xs">✓</span>}
-                </Badge>
-              );
-            })}
-
-            {/* Show active filters from More Filters dropdown */}
-            {moreFilterOptions
-              .filter(filter => activeFilters.includes(filter.key))
-              .map((filter) => (
-                <Badge 
-                  key={filter.key}
-                  variant="secondary"
-                  className="cursor-pointer transition-all duration-200 relative bg-primary text-primary-foreground border-primary shadow-lg scale-105"
-                  onClick={() => handleFilterToggle(filter.key)}
-                >
-                  {filter.label}
-                  <span className="ml-1 text-xs">✓</span>
-                </Badge>
-              ))}
-            
-            {/* More Filters Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full h-7 px-3 cursor-pointer hover:bg-primary/10 hover:border-primary hover:text-primary transition-all duration-200"
-                >
-                  <Filter className="h-3 w-3 mr-1" />
-                  More Filters
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                side="bottom" 
-                align="end" 
-                sideOffset={8} 
-                className="bg-popover text-popover-foreground border border-border shadow-elegant z-[100] w-48 max-h-64 overflow-y-auto"
-              >
-                {moreFilterOptions.map((filter) => {
-                  const isActive = activeFilters.includes(filter.key);
-                  
-                  return (
-                    <DropdownMenuItem
-                      key={filter.key}
-                      onClick={() => handleFilterToggle(filter.key)}
-                      className={cn(
-                        "cursor-pointer",
-                        isActive && "bg-primary/10 text-primary font-medium"
-                      )}
-                    >
-                      {filter.label}
-                      {isActive && <span className="ml-auto text-xs">✓</span>}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {(activeFilters.length > 0 || searchQuery) && (
-              <Badge 
-                variant="outline" 
-                className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground border-destructive text-destructive transition-all"
-                onClick={clearFilters}
-              >
-                Clear All {activeFilters.length > 0 && `(${activeFilters.length})`}
-              </Badge>
-            )}
-          </div>
-
-          <div className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-              {/* Live Classes Sidebar */}
-              <div className="order-2 lg:order-1">
-                <h2 className="text-xl font-bold mb-4 flex items-center">
-                  <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
-                  Live Now
-                </h2>
-                <div className="space-y-3">
-                  {classesLoading ? (
-                    Array.from({ length: 3 }).map((_, index) => (
-                      <Card key={index} className="shadow-card">
-                        <CardContent className="p-4">
-                          <Skeleton className="h-4 w-3/4 mb-2" />
-                          <Skeleton className="h-3 w-1/2 mb-2" />
-                          <div className="flex items-center justify-between mb-3">
-                            <Skeleton className="h-3 w-16" />
-                            <Skeleton className="h-5 w-12" />
-                          </div>
-                          <Skeleton className="h-8 w-full" />
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : liveClasses.length > 0 ? (
-                    liveClasses.slice(0, 5).map((liveClass) => (
-                      <Card 
-                        key={liveClass.id} 
-                        className="shadow-card hover:shadow-elegant transition-all duration-300 cursor-pointer"
-                        onClick={(e) => handleCardClick(liveClass.id, e)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-sm leading-tight">{liveClass.title}</h3>
-                            {liveClass.is_ongoing && (
-                              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse ml-2 mt-1 flex-shrink-0"></div>
-                            )}
-                          </div>
-                          
-                          <p className="text-xs text-muted-foreground mb-2">
-                            by {liveClass.host_name}
-                          </p>
-                          
-                          {liveClass.book_title && (
-                            <div className="text-xs text-muted-foreground mb-2 flex items-center">
-                              <BookOpen className="h-3 w-3 mr-1" />
-                              {liveClass.book_title}
-                            </div>
-                          )}
-                          
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-muted-foreground">
-                              {formatScheduledTime(liveClass.scheduled_date)}
-                            </span>
-                            <Badge variant="secondary" className="text-xs">
-                              <Users className="h-3 w-3 mr-1" />
-                              {liveClass.participant_count}
-                            </Badge>
-                          </div>
-                          
-                          <Button 
-                            size="sm" 
-                            className={`w-full ${liveClass.is_ongoing ? 'bg-gradient-primary' : ''}`}
-                            variant={liveClass.is_ongoing ? "default" : "outline"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleJoinClass(liveClass.id, liveClass.platform_join_url || undefined, liveClass.is_ongoing);
-                            }}
-                            disabled={!liveClass.platform_join_url && liveClass.is_ongoing}
-                          >
-                            {liveClass.is_ongoing ? (
-                              <>
-                                <Play className="h-3 w-3 mr-2" />
-                                Join Live
-                              </>
-                            ) : (
-                              <>
-                                <Calendar className="h-3 w-3 mr-2" />
-                                Register
-                              </>
-                            )}
-                          </Button>
-                          
-                          {liveClass.platform_join_url && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="w-full mt-2 text-xs"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/class/${liveClass.id}`);
-                              }}
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              View Details
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <Card className="shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <div className="text-muted-foreground text-sm">
-                          <Video className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          No live classes right now
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Check back later or host your own!
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-
-                {/* Quick Stats */}
-                <div className="mt-8 p-4 bg-card rounded-lg shadow-card">
-                  <h3 className="font-semibold mb-3">Your Learning</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Classes Joined</span>
-                      {statsLoading ? (
-                        <Skeleton className="h-4 w-8" />
-                      ) : (
-                        <span className="font-medium">{stats.classesJoined}</span>
-                      )}
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Hours Learned</span>
-                      {statsLoading ? (
-                        <Skeleton className="h-4 w-8" />
-                      ) : (
-                        <span className="font-medium">{stats.hoursLearned}</span>
-                      )}
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Classes Hosted</span>
-                      {statsLoading ? (
-                        <Skeleton className="h-4 w-8" />
-                      ) : (
-                        <span className="font-medium">{stats.hostedClasses}</span>
-                      )}
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Completed</span>
-                      {statsLoading ? (
-                        <Skeleton className="h-4 w-8" />
-                      ) : (
-                        <span className="font-medium">{stats.completedClasses}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Book Classes - Main Content */}
-              <div className="order-1 lg:order-2 lg:col-span-2">
-                <div className="flex items-center space-x-2 mb-4">
-                  <h2 className="text-xl font-bold">Book Classes</h2>
-                  {(searchQuery || activeFilters.length > 0) && (
-                    <Badge variant="secondary" className="text-xs">
-                      {searchedClasses.length} results
-                    </Badge>
-                  )}
-                </div>
-
-                {searchLoading ? (
-                  <div className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <Card key={index} className="shadow-card">
-                        <CardHeader>
-                          <Skeleton className="h-6 w-3/4 mb-2" />
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Skeleton className="w-6 h-6 rounded-full" />
-                            <div>
-                              <Skeleton className="h-4 w-20 mb-1" />
-                              <Skeleton className="h-3 w-16" />
-                            </div>
-                          </div>
-                          <Skeleton className="h-4 w-full mb-2" />
-                          <Skeleton className="h-4 w-2/3" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex gap-2 mb-4">
-                            <Skeleton className="h-5 w-16" />
-                            <Skeleton className="h-5 w-20" />
-                          </div>
-                          <Skeleton className="h-8 w-full" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : searchedClasses.length > 0 ? (
-                  <div className="space-y-4">
-                    {searchedClasses.map((classItem) => (
-                      <Card 
-                        key={classItem.id} 
-                        className="shadow-card hover:shadow-elegant transition-all duration-300 cursor-pointer"
-                        onClick={(e) => handleCardClick(classItem.id, e)}
-                      >
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg mb-2">{classItem.title}</CardTitle>
-                              <div className="flex items-center space-x-2 mb-2">
-                                <Avatar className="w-6 h-6">
-                                  <AvatarFallback className="text-xs">
-                                    {classItem.host_name?.split(' ').map(n => n[0]).join('') || '?'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="text-sm font-medium">{classItem.host_name}</p>
-                                  <p className="text-xs text-muted-foreground">@{classItem.host_username}</p>
-                                </div>
-                              </div>
-                            </div>
-                            {classItem.is_ongoing && (
-                              <Badge variant="destructive" className="text-xs">
-                                <div className="w-1 h-1 bg-white rounded-full mr-1 animate-pulse"></div>
-                                Live
-                              </Badge>
-                            )}
-                          </div>
-                          <CardDescription>{classItem.description}</CardDescription>
-                          
-                          {classItem.book_title && (
-                            <div className="mt-2 p-2 bg-muted/50 rounded-md">
-                              <div className="flex items-center space-x-2">
-                                <BookOpen className="h-4 w-4 text-primary" />
-                                <div>
-                                  <p className="text-sm font-medium">{classItem.book_title}</p>
-                                  {classItem.book_author && (
-                                    <p className="text-xs text-muted-foreground">by {classItem.book_author}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {classItem.category && (
-                              <Badge variant="default" className="text-xs">
-                                {classItem.category}
-                              </Badge>
-                            )}
-                            {classItem.tags?.map((tag, tagIndex) => (
-                              <Badge key={tagIndex} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                          
-                          <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
-                            <div className="flex items-center space-x-3">
-                              <span className="flex items-center">
-                                <Users className="h-3 w-3 mr-1" />
-                                {classItem.participant_count}/{classItem.max_participants}
-                              </span>
-                              {classItem.duration_minutes && (
-                                <span className="flex items-center">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {classItem.duration_minutes}min
-                                </span>
-                              )}
-                              <span className="flex items-center">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                {formatScheduledTime(classItem.scheduled_date)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                              <p>Platform: {classItem.platform}</p>
-                            </div>
-                            <div className="flex space-x-2">
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/class/${classItem.id}`);
-                                }}
-                              >
-                                Details
-                              </Button>
-                              <Button 
-                                className={`${classItem.is_ongoing ? 'bg-gradient-primary' : ''}`}
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleJoinClass(classItem.id, classItem.platform_join_url, classItem.is_ongoing);
-                                }}
-                                disabled={!classItem.platform_join_url && classItem.is_ongoing}
-                              >
-                                {classItem.is_ongoing ? 'Join Live' : 'Register'}
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No classes found</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {searchQuery || activeFilters.length > 0 
-                        ? "Try adjusting your search or filters"
-                        : "No classes are currently available"}
-                    </p>
-                    {(searchQuery || activeFilters.length > 0) && (
-                      <Button variant="outline" onClick={clearFilters}>
-                        Clear Search & Filters
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
+          <div className="flex items-start space-x-3">
+            <BookOpen className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium">Flexible Scheduling</p>
+              <p className="text-muted-foreground text-xs">Teach at your preferred times</p>
             </div>
-
-            {/* Host Benefits */}
-            <div className="mt-16 bg-gradient-subtle rounded-lg p-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-4">Share Your Knowledge</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Host your own book classes and share your passion for literature with readers worldwide. Anyone can create and host classes on topics they love.
-                </p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-6 text-center">
-                <div className="p-4">
-                  <Mic className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Easy Teaching Tools</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Built-in video conferencing, screen sharing, and interactive whiteboards
-                  </p>
-                </div>
-                <div className="p-4">
-                  <BookOpen className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Flexible Scheduling</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Set your own schedule and teach at your preferred times
-                  </p>
-                </div>
-                <div className="p-4">
-                  <Users className="h-8 w-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Global Reach</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connect with book lovers from around the world
-                  </p>
-                </div>
-              </div>
+          </div>
+          <div className="flex items-start space-x-3">
+            <Users className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium">Global Reach</p>
+              <p className="text-muted-foreground text-xs">Connect with readers worldwide</p>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <ScrollRestoreLayout scrollKey={`book-classes:${activeSection}`}>
+      {/* Mobile Section Tabs */}
+      <MobileSectionTabs
+        tabs={[
+          { key: 'all', label: 'All', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
+          { key: 'live', label: 'Live Now', icon: <Radio className="h-3.5 w-3.5" />, count: liveClasses.filter(c => c.is_ongoing || c.status === 'live').length },
+          { key: 'upcoming', label: 'Upcoming', icon: <Calendar className="h-3.5 w-3.5" /> },
+          { key: 'hosted', label: 'Hosted', icon: <FolderOpen className="h-3.5 w-3.5" />, count: hostedClasses.length, requiresAuth: true },
+          { key: 'joined', label: 'Joined', icon: <CheckCircle className="h-3.5 w-3.5" />, count: joinedClasses.length, requiresAuth: true },
+        ]}
+        activeTab={activeSection}
+        onTabChange={(tab) => setActiveSection(tab as ClassSection)}
+        isAuthenticated={isAuthenticated}
+      />
+
+      <ThreeColumnLayout
+        leftSidebar={leftSidebar}
+        centerContent={centerContent}
+        rightSidebar={rightSidebar}
+        leftColSpan={3}
+        centerColSpan={6}
+        rightColSpan={3}
+        hideLeftOnMobile={true}
+      />
+    </ScrollRestoreLayout>
   );
 };
 

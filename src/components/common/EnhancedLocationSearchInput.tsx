@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { MapPin, Check, Search, AlertCircle } from 'lucide-react';
+import { MapPin, Check, Search, AlertCircle, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -223,6 +223,16 @@ const EnhancedLocationSearchInput: React.FC<EnhancedLocationSearchInputProps> = 
     setTimeout(() => setShowSuggestions(false), 150);
   };
 
+  const clearInput = () => {
+    setInputValue('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    setErrorMessage(null);
+    onChange(null, '');
+    inputRef.current?.focus();
+  };
+
   useEffect(() => {
     if (selectedIndex >= 0 && suggestionRefs.current[selectedIndex]) {
       suggestionRefs.current[selectedIndex]?.scrollIntoView({
@@ -256,15 +266,25 @@ const EnhancedLocationSearchInput: React.FC<EnhancedLocationSearchInputProps> = 
             }
           }}
           placeholder={placeholder}
-          className="pr-10"
+          className={cn("pr-10", inputValue && "pr-16")}
           autoComplete="off"
         />
-        <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        {isLoading && (
-          <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+          {isLoading && (
             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
-          </div>
-        )}
+          )}
+          {inputValue && !isLoading && (
+            <button
+              type="button"
+              onClick={clearInput}
+              className="p-1 hover:bg-muted rounded-full transition-colors"
+              title="Clear location"
+            >
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+        </div>
       </div>
 
       {showSuggestions && (

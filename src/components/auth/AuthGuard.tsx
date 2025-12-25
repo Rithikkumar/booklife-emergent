@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { clearSensitiveCaches } from '@/utils/securityCache';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthGuardProps {
@@ -29,11 +30,16 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         setLoading(false);
         
         // Handle authentication events
-        if (event === 'SIGNED_OUT' && requireAuth) {
-          navigate(redirectTo, { 
-            replace: true,
-            state: { from: location.pathname }
-          });
+        if (event === 'SIGNED_OUT') {
+          // Clear sensitive caches on logout for security
+          clearSensitiveCaches();
+          
+          if (requireAuth) {
+            navigate(redirectTo, { 
+              replace: true,
+              state: { from: location.pathname }
+            });
+          }
         }
       }
     );

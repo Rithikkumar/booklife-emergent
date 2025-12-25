@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.send-community-message]
 verify_jwt = true
+
+[functions.send-class-email]
+verify_jwt = false
+
+[functions.process-class-reminders]
+verify_jwt = false

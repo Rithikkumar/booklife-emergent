@@ -8,10 +8,22 @@ export interface ClassStatus {
   endsIn: number; // minutes
 }
 
-export const getClassStatus = (scheduledDate: string, durationMinutes: number): ClassStatus => {
+export const getClassStatus = (scheduledDate: string | null | undefined, durationMinutes: number | null | undefined): ClassStatus => {
+  // Handle null/undefined scheduledDate
+  if (!scheduledDate) {
+    return {
+      isUpcoming: true,
+      isLive: false,
+      isEnded: false,
+      startsIn: 0,
+      endsIn: 0
+    };
+  }
+
   const now = new Date();
   const startTime = parseISO(scheduledDate);
-  const endTime = addMinutes(startTime, durationMinutes);
+  const duration = durationMinutes || 60; // Default to 60 minutes if not specified
+  const endTime = addMinutes(startTime, duration);
   
   // Allow joining 15 minutes before start
   const joinAllowedTime = subMinutes(startTime, 15);
@@ -49,6 +61,7 @@ export const formatTimeUntilClass = (minutesUntil: number): string => {
   }
 };
 
-export const formatClassTime = (scheduledDate: string): string => {
+export const formatClassTime = (scheduledDate: string | null | undefined): string => {
+  if (!scheduledDate) return 'Not scheduled';
   return format(parseISO(scheduledDate), 'MMM d, h:mm a');
 };

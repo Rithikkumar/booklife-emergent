@@ -11,6 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { clearSensitiveData } from '@/utils/apiValidation';
 
 interface Profile {
   username: string;
@@ -70,6 +71,9 @@ const ProfileDropdown: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
+      // Clear sensitive cached data before signing out
+      clearSensitiveData();
+      
       await supabase.auth.signOut();
       navigate('/');
       toast.success('Signed out successfully');

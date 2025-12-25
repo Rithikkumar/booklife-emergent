@@ -13,20 +13,37 @@ export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
+    // Check if we're on a native platform (Capacitor provides a way to check this)
+    const isNativePlatform = typeof (window as any).Capacitor !== 'undefined' && 
+                             (window as any).Capacitor.isNativePlatform();
+    
+    if (!isNativePlatform) {
+      // Skip push notification setup on web
+      setIsSupported(false);
+      return;
+    }
+
     // Check if push notifications are supported
     PushNotifications.checkPermissions().then(result => {
       setIsSupported(result.receive !== 'prompt-with-rationale');
+    }).catch(() => {
+      setIsSupported(false);
     });
 
     initializePushNotifications();
 
     return () => {
       // Cleanup listeners
-      PushNotifications.removeAllListeners();
+      PushNotifications.removeAllListeners().catch(() => {});
     };
   }, []);
 
   const initializePushNotifications = async () => {
+    // Skip on web platform
+    const isNativePlatform = typeof (window as any).Capacitor !== 'undefined' && 
+                             (window as any).Capacitor.isNativePlatform();
+    if (!isNativePlatform) return;
+
     try {
       // Request permission
       let permStatus = await PushNotifications.checkPermissions();

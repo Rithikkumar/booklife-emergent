@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, Book, User, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { validateOpenLibraryResponse, isAllowedImageUrl } from '@/utils/apiValidation';
+import { logger } from '@/utils/logger';
 
 interface BookSearchResult {
   key: string;
@@ -72,7 +73,7 @@ const BookSearchInput: React.FC<BookSearchInputProps> = ({
       setSearchResults(validatedData.docs as BookSearchResult[]);
       setShowResults(true);
     } catch (error) {
-      console.error('Error searching books:', error);
+      logger.error('Error searching books:', error);
       setSearchResults([]);
     } finally {
       setIsLoading(false);

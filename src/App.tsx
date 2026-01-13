@@ -32,6 +32,7 @@ import Messages from "./pages/Messages";
 import MessageThread from "./pages/MessageThread";
 import ScanBook from "./pages/ScanBook";
 import PrintStickers from "./pages/PrintStickers";
+import { logger } from '@/utils/logger';
 
 
 
@@ -55,7 +56,7 @@ const App = () => {
     cleanupExpiredCaches();
     
     if (isNative) {
-      console.log('Running as native app with push notifications:', isSupported);
+      logger.debug('Running as native app with push notifications:', isSupported);
     }
   }, [isNative, isSupported]);
 

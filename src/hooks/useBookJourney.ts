@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface JourneyPoint {
   neighborhood?: string;
@@ -103,7 +104,7 @@ export const useBookJourney = (bookTitle?: string, bookAuthor?: string) => {
 
         setJourneyPoints(points);
       } catch (err) {
-        console.error('Error fetching journey points:', err);
+        logger.error('Error fetching journey points:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch journey data');
         setJourneyPoints([]);
       } finally {

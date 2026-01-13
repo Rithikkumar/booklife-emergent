@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { searchLocations, LocationData } from '@/services/geocoding';
+import { logger } from '@/utils/logger';
 
 interface LocationSearchInputProps {
   label?: string;
@@ -54,7 +55,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
     } catch (error) {
-      console.error('Error searching locations:', error);
+      logger.error('Error searching locations:', error);
       setSuggestions([]);
       setShowSuggestions(false);
     } finally {

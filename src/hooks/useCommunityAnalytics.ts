@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateActivityLevel } from '@/utils/activityHelpers';
+import { logger } from '@/utils/logger';
 
 export interface CommunityAnalytics {
   memberCount: number;
@@ -21,17 +22,17 @@ export const useCommunityAnalytics = (communityId?: string) => {
     if (!communityId) return;
 
     setLoading(true);
-    console.log('Fetching analytics for community:', communityId);
+    logger.debug('Fetching analytics for community:', communityId);
     
     try {
       // Use the new analytics function for consistent data
       const { data, error } = await supabase
         .rpc('get_community_analytics', { p_community_id: communityId });
 
-      console.log('Analytics RPC result:', { data, error });
+      logger.debug('Analytics RPC result:', { data, error });
 
       if (error) {
-        console.error('Analytics RPC error:', error);
+        logger.error('Analytics RPC error:', error);
         throw error;
       }
 
@@ -67,7 +68,7 @@ export const useCommunityAnalytics = (communityId?: string) => {
         });
       }
     } catch (error) {
-      console.error('Error fetching community analytics:', error);
+      logger.error('Error fetching community analytics:', error);
       // Set default values on error
       const activityInfo = calculateActivityLevel(0, 0);
       setAnalytics({

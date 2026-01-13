@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
 import { useTheme } from 'next-themes';
+import { logger } from '@/utils/logger';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const Settings = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      logger.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ const Settings = () => {
       toast.success('Setting updated');
     } catch (error) {
       toast.error('Failed to update setting');
-      console.error('Error updating setting:', error);
+      logger.error('Error updating setting:', error);
     } finally {
       setSavingKey(null);
     }

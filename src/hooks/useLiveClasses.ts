@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface LiveClass {
   id: string;
@@ -50,7 +51,7 @@ export const useLiveClasses = () => {
       if (interestError) throw interestError;
       setUserInterests(data || []);
     } catch (err) {
-      console.error('Error fetching user interests:', err);
+      logger.error('Error fetching user interests:', err);
       // Don't show error toast for interests as it's not critical
     }
   };
@@ -72,7 +73,7 @@ export const useLiveClasses = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch live classes';
       setError(errorMessage);
-      console.error('Error fetching live classes:', err);
+      logger.error('Error fetching live classes:', err);
     } finally {
       setLoading(false);
     }

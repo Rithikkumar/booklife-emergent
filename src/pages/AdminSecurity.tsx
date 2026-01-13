@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from '@/utils/logger';
 
 const AdminSecurity = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const AdminSecurity = () => {
           return;
         }
       } catch (error) {
-        console.error('Error checking admin access:', error);
+        logger.error('Error checking admin access:', error);
         navigate('/');
       }
     };

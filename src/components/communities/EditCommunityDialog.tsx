@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CommunityDetails } from '@/hooks/useCommunityDetails';
 import ImageUpload from '@/components/common/ImageUpload';
+import { logger } from '@/utils/logger';
 
 interface EditCommunityDialogProps {
   community: CommunityDetails;
@@ -87,7 +88,7 @@ const EditCommunityDialog: React.FC<EditCommunityDialogProps> = ({ community, on
       onUpdate();
       setOpen(false);
     } catch (error) {
-      console.error('Error updating community:', error);
+      logger.error('Error updating community:', error);
       toast({
         title: "Error",
         description: "Failed to update community",
@@ -242,7 +243,7 @@ const EditCommunityDialog: React.FC<EditCommunityDialogProps> = ({ community, on
               <Switch
                 checked={!formData.is_public}
                 onCheckedChange={(checked) => {
-                  console.log('Privacy toggle changed:', { checked, newIsPublic: !checked });
+                  logger.debug('Privacy toggle changed:', { checked, newIsPublic: !checked });
                   setFormData(prev => ({ ...prev, is_public: !checked }));
                 }}
               />
@@ -267,7 +268,7 @@ const EditCommunityDialog: React.FC<EditCommunityDialogProps> = ({ community, on
               <Switch
                 checked={formData.restrict_messaging}
                 onCheckedChange={(checked) => {
-                  console.log('Messaging toggle changed:', { checked });
+                  logger.debug('Messaging toggle changed:', { checked });
                   setFormData(prev => ({ ...prev, restrict_messaging: checked }));
                 }}
               />

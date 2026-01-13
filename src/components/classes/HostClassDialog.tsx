@@ -21,6 +21,7 @@ import BookSearchInput from "@/components/common/BookSearchInput";
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeInput } from "@/components/common/FormValidation";
 import { handleDatabaseError, showErrorToast, rateLimiter, logSecurityEvent } from "@/utils/errorHandling";
+import { logger } from '@/utils/logger';
 
 interface HostClassDialogProps {
   children: React.ReactNode;
@@ -234,7 +235,7 @@ const HostClassDialog: React.FC<HostClassDialogProps> = ({ children }) => {
       window.dispatchEvent(new CustomEvent('classCreated'));
       
     } catch (error: any) {
-      console.error('Error creating class:', error);
+      logger.error('Error creating class:', error);
       
       const errorInfo = handleDatabaseError(error);
       showErrorToast(errorInfo);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
+import { logger } from '@/utils/logger';
   Dialog,
   DialogContent,
   DialogHeader,
@@ -57,7 +58,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({
       if (error) throw error;
       setSearchResults(data || []);
     } catch (error) {
-      console.error('Error searching users:', error);
+      logger.error('Error searching users:', error);
     } finally {
       setSearching(false);
     }
@@ -82,7 +83,7 @@ export const NewChatDialog: React.FC<NewChatDialogProps> = ({
       setSearchQuery('');
       setSearchResults([]);
     } catch (error) {
-      console.error('Error starting chat:', error);
+      logger.error('Error starting chat:', error);
       toast({
         title: "Failed to start chat",
         description: "Please try again later",

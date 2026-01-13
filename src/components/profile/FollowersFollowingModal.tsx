@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Lock, User, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
+import { logger } from '@/utils/logger';
   Dialog,
   DialogContent,
   DialogHeader,
@@ -120,7 +121,7 @@ const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = ({
 
       setUsers(usersWithStatus);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      logger.error('Error fetching users:', error);
       setUsers([]);
     } finally {
       setLoading(false);

@@ -16,6 +16,7 @@ import { useFollowingBooks } from '@/hooks/useFollowingBooks';
 import { useBookStats } from '@/hooks/useBookStats';
 import { useBookStories } from '@/hooks/useBookStories';
 import { BookCover } from '@/utils/bookCovers';
+import { logger } from '@/utils/logger';
 
 interface BookDetailsData {
   id: string;
@@ -151,7 +152,7 @@ const BookDetails: React.FC = () => {
           });
         }
       } catch (err) {
-        console.error('Error fetching book details:', err);
+        logger.error('Error fetching book details:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch book details');
       } finally {
         setLoading(false);

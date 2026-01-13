@@ -10,6 +10,7 @@ import { Shield, Eye, MapPin, Users, Lock, Info } from 'lucide-react';
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export const SecuritySettings = () => {
   const { data: profile, refetch } = useProfile();
@@ -28,7 +29,7 @@ export const SecuritySettings = () => {
       toast.success('Privacy settings updated');
       refetch();
     } catch (error) {
-      console.error('Error updating privacy settings:', error);
+      logger.error('Error updating privacy settings:', error);
       toast.error('Failed to update privacy settings');
     } finally {
       setIsUpdating(false);

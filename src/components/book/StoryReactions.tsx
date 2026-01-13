@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { logger } from '@/utils/logger';
 
 interface Reaction {
   id: string;
@@ -69,7 +70,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
 
       setReactions(reactionCounts);
     } catch (error) {
-      console.error('Error fetching reactions:', error);
+      logger.error('Error fetching reactions:', error);
     }
   };
 
@@ -119,7 +120,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
 
       await fetchReactions();
     } catch (error) {
-      console.error('Error handling reaction:', error);
+      logger.error('Error handling reaction:', error);
       toast.error('Failed to update reaction');
     } finally {
       setLoading(false);

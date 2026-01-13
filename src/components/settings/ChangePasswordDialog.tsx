@@ -3,6 +3,7 @@ import { Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
+import { logger } from '@/utils/logger';
   Dialog,
   DialogContent,
   DialogDescription,
@@ -53,7 +54,7 @@ export const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({ isOp
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       onClose();
     } catch (error: any) {
-      console.error('Error updating password:', error);
+      logger.error('Error updating password:', error);
       toast.error(error.message || 'Failed to update password');
     } finally {
       setLoading(false);

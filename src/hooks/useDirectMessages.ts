@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CHAT_CONFIG } from '@/constants/chat';
+import { logger } from '@/utils/logger';
 
 export interface DirectMessage {
   id: string;
@@ -246,7 +247,7 @@ export const useDirectMessages = (conversationId?: string) => {
         setMessages(prev => [...reversedMessages, ...prev]);
       }
     } catch (error) {
-      console.error('[DM] Error fetching messages:', error);
+      logger.error('[DM] Error fetching messages:', error);
       toast.error('Failed to load messages');
     }
   }, []);
@@ -353,7 +354,7 @@ export const useDirectMessages = (conversationId?: string) => {
       setConversations(conversationsWithDetails);
       setCachedData(CONVERSATIONS_CACHE_KEY, conversationsWithDetails);
     } catch (error) {
-      console.error('[DM] Error fetching conversations:', error);
+      logger.error('[DM] Error fetching conversations:', error);
       toast.error('Failed to load conversations');
     }
   }, []);
@@ -422,7 +423,7 @@ export const useDirectMessages = (conversationId?: string) => {
 
       return true;
     } catch (error) {
-      console.error('[DM] Error sending message:', error);
+      logger.error('[DM] Error sending message:', error);
       
       // Mark message as failed
       setMessages(prev => 
@@ -491,7 +492,7 @@ export const useDirectMessages = (conversationId?: string) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('[DM] Error adding reaction:', error);
+      logger.error('[DM] Error adding reaction:', error);
       // Rollback
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
@@ -519,7 +520,7 @@ export const useDirectMessages = (conversationId?: string) => {
       if (error) throw error;
       toast.success('Message deleted');
     } catch (error) {
-      console.error('[DM] Error deleting message:', error);
+      logger.error('[DM] Error deleting message:', error);
       // Restore the message on error
       setMessages(prev => [...prev, messageToDelete].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -542,7 +543,7 @@ export const useDirectMessages = (conversationId?: string) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('[DM] Error marking messages as read:', error);
+      logger.error('[DM] Error marking messages as read:', error);
     }
   }, [currentUserId]);
 

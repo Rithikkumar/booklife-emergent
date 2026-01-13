@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface UserActivity {
   communitiesJoined: number;
@@ -59,7 +60,7 @@ export const useUserActivity = () => {
           booksShared: booksCount || 0
         });
       } catch (err) {
-        console.error('Error fetching user activity:', err);
+        logger.error('Error fetching user activity:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch user activity');
       } finally {
         setLoading(false);

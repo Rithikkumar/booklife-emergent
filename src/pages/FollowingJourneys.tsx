@@ -9,6 +9,7 @@ import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { useBookJourney } from '@/hooks/useBookJourney';
 import { BookCover } from '@/utils/bookCovers';
 import { motion } from 'framer-motion';
+import { logger } from '@/utils/logger';
 
 interface FollowedBook {
   id: string;
@@ -37,7 +38,7 @@ const FollowingJourneys: React.FC = () => {
       if (error) throw error;
       setFollowedBooks(data || []);
     } catch (error) {
-      console.error('Error fetching followed books:', error);
+      logger.error('Error fetching followed books:', error);
       toast.error('Failed to load following journeys');
     } finally {
       setLoading(false);
@@ -62,7 +63,7 @@ const FollowingJourneys: React.FC = () => {
       setFollowedBooks(prev => prev.filter(book => book.id !== bookId));
       toast.success('Unfollowed book journey');
     } catch (error) {
-      console.error('Error unfollowing book:', error);
+      logger.error('Error unfollowing book:', error);
       toast.error('Failed to unfollow book');
     }
   };
@@ -96,7 +97,7 @@ const FollowingJourneys: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error finding book:', error);
+      logger.error('Error finding book:', error);
       toast.error('Failed to load book details');
     }
   };

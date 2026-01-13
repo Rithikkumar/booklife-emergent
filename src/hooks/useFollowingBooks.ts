@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface FollowedBook {
   id: string;
@@ -32,7 +33,7 @@ export const useFollowingBooks = () => {
       if (error) throw error;
       setFollowedBooks(data || []);
     } catch (error) {
-      console.error('Error fetching followed books:', error);
+      logger.error('Error fetching followed books:', error);
       toast.error('Failed to load following journeys');
     } finally {
       setLoading(false);
@@ -76,7 +77,7 @@ export const useFollowingBooks = () => {
       toast.success('Now following this book\'s journey!');
       return true;
     } catch (error) {
-      console.error('Error following book:', error);
+      logger.error('Error following book:', error);
       toast.error('Failed to follow book journey');
       return false;
     }
@@ -102,7 +103,7 @@ export const useFollowingBooks = () => {
       toast.success('Unfollowed book journey');
       return true;
     } catch (error) {
-      console.error('Error unfollowing book:', error);
+      logger.error('Error unfollowing book:', error);
       toast.error('Failed to unfollow book journey');
       return false;
     }

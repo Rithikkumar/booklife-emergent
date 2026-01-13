@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface RecentStory {
   id: string;
@@ -85,7 +86,7 @@ export const useRecentStories = () => {
 
         setStories(transformedStories);
       } catch (err) {
-        console.error('Error fetching recent stories:', err);
+        logger.error('Error fetching recent stories:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch recent stories');
       } finally {
         setLoading(false);

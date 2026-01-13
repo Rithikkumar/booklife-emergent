@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface TrendingTopic {
   tag: string;
@@ -48,7 +49,7 @@ export const useTrendingTopics = () => {
 
         setTrendingTopics(sortedTopics);
       } catch (err) {
-        console.error('Error fetching trending topics:', err);
+        logger.error('Error fetching trending topics:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch trending topics');
       } finally {
         setLoading(false);

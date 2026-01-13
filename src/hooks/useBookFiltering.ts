@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface FilteredBook {
   id: string;
@@ -137,7 +138,7 @@ export const useBookFiltering = () => {
       const { data, error } = await supabase.rpc('get_book_statistics_v2');
 
       if (error) {
-        console.error('Query error:', error);
+        logger.error('Query error:', error);
         throw error;
       }
 
@@ -227,7 +228,7 @@ export const useBookFiltering = () => {
 
       setBooks(processedBooks);
     } catch (err) {
-      console.error('Error fetching books:', err);
+      logger.error('Error fetching books:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch books');
       setBooks([]);
     } finally {

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Compass } from "lucide-react";
 import {
+import { logger } from '@/utils/logger';
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -107,7 +108,7 @@ const Communities = () => {
       createdCommunities.refreshCommunities();
       recommendedCommunities.refreshCommunities();
     } catch (error) {
-      console.error('Error joining community:', error);
+      logger.error('Error joining community:', error);
     }
   };
 
@@ -135,7 +136,7 @@ const Communities = () => {
         .single();
 
       if (error) {
-        console.error('Error creating community:', error);
+        logger.error('Error creating community:', error);
         return;
       }
 
@@ -144,7 +145,7 @@ const Communities = () => {
       joinedCommunities.refreshCommunities();
       createdCommunities.refreshCommunities();
     } catch (error) {
-      console.error('Error creating community:', error);
+      logger.error('Error creating community:', error);
     }
   };
 

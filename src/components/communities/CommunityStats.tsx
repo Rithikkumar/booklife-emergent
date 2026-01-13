@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
+import { logger } from '@/utils/logger';
   Users, 
   MessageSquare, 
   TrendingUp, 
@@ -18,7 +19,7 @@ interface CommunityStatsProps {
 
 const CommunityStats: React.FC<CommunityStatsProps> = ({ analytics, loading }) => {
   // Debug logging
-  console.log('CommunityStats render:', { analytics, loading, analyticsType: typeof analytics });
+  logger.debug('CommunityStats render:', { analytics, loading, analyticsType: typeof analytics });
 
   if (loading || !analytics) {
     return (
@@ -46,7 +47,7 @@ const CommunityStats: React.FC<CommunityStatsProps> = ({ analytics, loading }) =
 
   // Double-check analytics is available before using - additional safety
   if (!analytics || typeof analytics.memberCount === 'undefined') {
-    console.warn('Analytics data is invalid:', analytics);
+    logger.warn('Analytics data is invalid:', analytics);
     return null;
   }
 

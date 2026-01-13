@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import QRCode from 'qrcode';
 import { BookCover } from "@/utils/bookCovers";
 import { getBookScanUrl, APP_CONFIG } from "@/constants/appConfig";
+import { logger } from '@/utils/logger';
 
 type BookCodeMode = 'not-set' | 'checking' | 'new' | 'existing' | 'pregenerated';
 
@@ -83,7 +84,7 @@ const RegisterBook = () => {
             setBookCodeMode('new');
           }
         } catch (e) {
-          console.error('Error parsing saved code:', e);
+          logger.error('Error parsing saved code:', e);
           sessionStorage.removeItem(SESSION_STORAGE_KEY);
         }
       }
@@ -129,7 +130,7 @@ const RegisterBook = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error looking up book code:', error);
+        logger.error('Error looking up book code:', error);
         setBookCodeMode('not-set');
         return;
       }
@@ -168,7 +169,7 @@ const RegisterBook = () => {
           .maybeSingle();
 
         if (pregeneratedError) {
-          console.error('Error looking up pregenerated code:', pregeneratedError);
+          logger.error('Error looking up pregenerated code:', pregeneratedError);
         }
 
         if (pregeneratedCode && !pregeneratedCode.claimed_by) {
@@ -205,7 +206,7 @@ const RegisterBook = () => {
         }
       }
     } catch (error) {
-      console.error('Error looking up book code:', error);
+      logger.error('Error looking up book code:', error);
       setBookCodeMode('not-set');
     } finally {
       setIsLookingUp(false);
@@ -249,7 +250,7 @@ const RegisterBook = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking code uniqueness:', error);
+          logger.error('Error checking code uniqueness:', error);
           toast.error('Error generating code. Please try again.');
           return;
         }
@@ -295,7 +296,7 @@ const RegisterBook = () => {
         toast.error('Unable to generate unique code. Please try again.');
       }
     } catch (error) {
-      console.error('Error generating book code:', error);
+      logger.error('Error generating book code:', error);
       toast.error('Error generating code. Please try again.');
     } finally {
       setIsGeneratingCode(false);
@@ -388,7 +389,7 @@ const RegisterBook = () => {
           .eq('id', existingBookInfo.pregeneratedCodeId);
 
         if (updateError) {
-          console.error('Error marking code as claimed:', updateError);
+          logger.error('Error marking code as claimed:', updateError);
         }
 
         toast.success(`You're the first owner of "${existingBookInfo.title}"! The journey begins.`);
@@ -439,7 +440,7 @@ const RegisterBook = () => {
         resetForm();
       }
     } catch (error) {
-      console.error('Error registering book:', error);
+      logger.error('Error registering book:', error);
       toast.error('Failed to register book. Please try again.');
     } finally {
       setIsRegistering(false);

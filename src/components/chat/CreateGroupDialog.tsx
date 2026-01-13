@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
+import { logger } from '@/utils/logger';
   Dialog,
   DialogContent,
   DialogHeader,
@@ -71,7 +72,7 @@ export const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
       
       setSearchResults(filtered);
     } catch (error) {
-      console.error('Error searching users:', error);
+      logger.error('Error searching users:', error);
     } finally {
       setSearching(false);
     }
@@ -137,7 +138,7 @@ export const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({
       setSelectedMembers([]);
       setSearchQuery('');
     } catch (error) {
-      console.error('Error creating group:', error);
+      logger.error('Error creating group:', error);
       toast({
         title: "Failed to create group",
         description: "Please try again later",

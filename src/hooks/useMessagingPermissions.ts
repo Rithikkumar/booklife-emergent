@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const useMessagingPermissions = (communityId?: string) => {
   const [canSendMessages, setCanSendMessages] = useState(false);
@@ -64,7 +65,7 @@ export const useMessagingPermissions = (communityId?: string) => {
         }
 
       } catch (error) {
-        console.error('Error checking messaging permissions:', error);
+        logger.error('Error checking messaging permissions:', error);
         setCanSendMessages(false);
       } finally {
         setLoading(false);

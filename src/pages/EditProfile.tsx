@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import LocationSearchInput from '@/components/common/LocationSearchInput';
 import ImageUpload from '@/components/common/ImageUpload';
+import { logger } from '@/utils/logger';
 
 interface ProfileData {
   username: string;
@@ -140,7 +141,7 @@ const EditProfile: React.FC = () => {
         setUsernameMessage('Username is available');
       }
     } catch (error) {
-      console.error('Error checking username:', error);
+      logger.error('Error checking username:', error);
       setUsernameStatus('idle');
       setUsernameMessage('');
     }
@@ -204,7 +205,7 @@ const EditProfile: React.FC = () => {
       toast.success('Profile updated successfully');
       navigate(`/profile/${profile.username}`);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       toast.error('Error updating profile');
     } finally {
       setLoading(false);

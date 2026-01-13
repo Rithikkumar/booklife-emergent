@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { logger } from '@/utils/logger';
 
 interface UserProfile {
   id: string;
@@ -45,7 +46,7 @@ const UserSearchInput: React.FC<UserSearchInputProps> = ({ className = "", onUse
       if (error) throw error;
       setResults(data || []);
     } catch (error) {
-      console.error('Error searching users:', error);
+      logger.error('Error searching users:', error);
       setResults([]);
     } finally {
       setIsLoading(false);

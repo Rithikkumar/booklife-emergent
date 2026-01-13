@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 /**
  * Security Cache Management
  * Handles secure storage and cleanup of sensitive browser cache data
@@ -14,7 +15,7 @@ export const setSecureCache = (key: string, value: string, expirationMs = DEFAUL
     localStorage.setItem(key, value);
     localStorage.setItem(`${key}${CACHE_EXPIRATION_KEY_SUFFIX}`, String(Date.now() + expirationMs));
   } catch (error) {
-    console.error('Failed to set secure cache:', error);
+    logger.error('Failed to set secure cache:', error);
   }
 };
 
@@ -36,7 +37,7 @@ export const getSecureCache = (key: string): string | null => {
     
     return localStorage.getItem(key);
   } catch (error) {
-    console.error('Failed to get secure cache:', error);
+    logger.error('Failed to get secure cache:', error);
     return null;
   }
 };
@@ -49,7 +50,7 @@ export const removeSecureCache = (key: string): void => {
     localStorage.removeItem(key);
     localStorage.removeItem(`${key}${CACHE_EXPIRATION_KEY_SUFFIX}`);
   } catch (error) {
-    console.error('Failed to remove secure cache:', error);
+    logger.error('Failed to remove secure cache:', error);
   }
 };
 
@@ -84,9 +85,9 @@ export const clearSensitiveCaches = (): void => {
     // Clear session storage security logs
     sessionStorage.removeItem('securityLogs');
     
-    console.log(`Cleared ${keysToRemove.length} sensitive cache entries`);
+    logger.debug(`Cleared ${keysToRemove.length} sensitive cache entries`);
   } catch (error) {
-    console.error('Failed to clear sensitive caches:', error);
+    logger.error('Failed to clear sensitive caches:', error);
   }
 };
 
@@ -117,9 +118,9 @@ export const cleanupExpiredCaches = (): void => {
     });
     
     if (keysToRemove.length > 0) {
-      console.log(`Cleaned up ${keysToRemove.length / 2} expired cache entries`);
+      logger.debug(`Cleaned up ${keysToRemove.length / 2} expired cache entries`);
     }
   } catch (error) {
-    console.error('Failed to cleanup expired caches:', error);
+    logger.error('Failed to cleanup expired caches:', error);
   }
 };

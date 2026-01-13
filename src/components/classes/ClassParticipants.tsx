@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Crown, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface Participant {
   id: string;
@@ -68,7 +69,7 @@ const ClassParticipants: React.FC<ClassParticipantsProps> = ({
 
         setParticipantsList(participantsWithProfiles);
       } catch (error) {
-        console.error('Error fetching participants:', error);
+        logger.error('Error fetching participants:', error);
       } finally {
         setLoading(false);
       }

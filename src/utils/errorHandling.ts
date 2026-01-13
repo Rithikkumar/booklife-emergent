@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export interface ErrorInfo {
   message: string;
@@ -23,7 +24,7 @@ export class AppError extends Error {
 }
 
 export const handleAuthError = (error: any): ErrorInfo => {
-  console.error('Authentication error:', error);
+  logger.error('Authentication error:', error);
   
   // Map common Supabase auth errors to user-friendly messages
   const errorMap: Record<string, string> = {
@@ -47,7 +48,7 @@ export const handleAuthError = (error: any): ErrorInfo => {
 };
 
 export const handleDatabaseError = (error: any): ErrorInfo => {
-  console.error('Database error:', error);
+  logger.error('Database error:', error);
   
   // Don't expose sensitive database information
   const genericMessage = 'A database error occurred. Please try again later.';
@@ -75,7 +76,7 @@ export const handleDatabaseError = (error: any): ErrorInfo => {
 };
 
 export const handleNetworkError = (error: any): ErrorInfo => {
-  console.error('Network error:', error);
+  logger.error('Network error:', error);
   
   if (!navigator.onLine) {
     return {
@@ -91,7 +92,7 @@ export const handleNetworkError = (error: any): ErrorInfo => {
 };
 
 export const handleGeneralError = (error: any): ErrorInfo => {
-  console.error('General error:', error);
+  logger.error('General error:', error);
   
   if (error instanceof AppError) {
     return {
@@ -139,12 +140,12 @@ export const logSecurityEvent = (event: string, details?: any, severity: 'low' |
   };
   
   // Enhanced logging with structured data
-  console.warn(`🔒 Security Event [${severity.toUpperCase()}]: ${event}`, context);
+  logger.warn(`🔒 Security Event [${severity.toUpperCase()}]: ${event}`, context);
   
   // Rate limit security events to prevent flooding
   const eventKey = `security_event_${event}`;
   if (rateLimiter.isRateLimited(eventKey, 10, 60000)) {
-    console.warn('Security event rate limited:', event);
+    logger.warn('Security event rate limited:', event);
     return;
   }
   
@@ -158,7 +159,7 @@ export const logSecurityEvent = (event: string, details?: any, severity: 'low' |
     }
     sessionStorage.setItem('securityLogs', JSON.stringify(securityLogs));
   } catch (error) {
-    console.error('Failed to store security log:', error);
+    logger.error('Failed to store security log:', error);
   }
   
   // In production, implement:

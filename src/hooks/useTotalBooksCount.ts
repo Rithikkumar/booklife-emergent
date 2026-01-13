@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const useTotalBooksCount = () => {
   const [totalCount, setTotalCount] = useState<number>(0);
@@ -30,7 +31,7 @@ export const useTotalBooksCount = () => {
 
       setTotalCount(uniqueBooks.size);
     } catch (err) {
-      console.error('Error fetching total books count:', err);
+      logger.error('Error fetching total books count:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch total count');
       setTotalCount(0);
     } finally {

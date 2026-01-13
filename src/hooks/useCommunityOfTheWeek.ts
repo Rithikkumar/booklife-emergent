@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface CommunityOfTheWeek {
   id: string;
@@ -82,7 +83,7 @@ export const useCommunityOfTheWeek = () => {
           });
         }
       } catch (err) {
-        console.error('Error fetching community of the week:', err);
+        logger.error('Error fetching community of the week:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch community of the week');
       } finally {
         setLoading(false);

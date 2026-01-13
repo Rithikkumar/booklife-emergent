@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { logger } from '@/utils/logger';
 
 interface Comment {
   id: string;
@@ -78,7 +79,7 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds })
 
       setComments(commentsWithProfiles);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      logger.error('Error fetching comments:', error);
       toast.error('Failed to load comments');
     } finally {
       setLoading(false);
@@ -112,7 +113,7 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds })
       await fetchComments();
       toast.success('Comment added!');
     } catch (error) {
-      console.error('Error adding comment:', error);
+      logger.error('Error adding comment:', error);
       toast.error('Failed to add comment');
     } finally {
       setSubmitting(false);
@@ -131,7 +132,7 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds })
       await fetchComments();
       toast.success('Comment deleted');
     } catch (error) {
-      console.error('Error deleting comment:', error);
+      logger.error('Error deleting comment:', error);
       toast.error('Failed to delete comment');
     }
   };

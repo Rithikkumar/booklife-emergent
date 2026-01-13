@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface BookStory {
   id: string;
@@ -109,7 +110,7 @@ export const useBookStories = (bookTitle?: string, bookAuthor?: string): BookSto
       const uniqueOwnerIds = [...new Set(data?.map(book => book.user_id).filter(Boolean) as string[])];
       setOwnerUserIds(uniqueOwnerIds);
     } catch (err) {
-      console.error('Error fetching book stories:', err);
+      logger.error('Error fetching book stories:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch book stories');
     } finally {
       setLoading(false);

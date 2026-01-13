@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const AuthCallback: React.FC = () => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error('OAuth callback error:', sessionError);
+          logger.error('OAuth callback error:', sessionError);
           setError(sessionError.message);
           setTimeout(() => navigate('/auth'), 3000);
           return;
@@ -29,7 +30,7 @@ const AuthCallback: React.FC = () => {
           setTimeout(() => navigate('/auth'), 2000);
         }
       } catch (err) {
-        console.error('Unexpected error during OAuth callback:', err);
+        logger.error('Unexpected error during OAuth callback:', err);
         setError('An unexpected error occurred. Redirecting...');
         setTimeout(() => navigate('/auth'), 3000);
       }

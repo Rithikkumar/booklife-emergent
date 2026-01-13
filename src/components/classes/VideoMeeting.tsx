@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mic, MicOff, Video, VideoOff, Users, Settings, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from '@/utils/logger';
 
 interface VideoMeetingProps {
   platform: string;
@@ -47,7 +48,7 @@ const VideoMeeting: React.FC<VideoMeetingProps> = ({
             break;
         }
       } catch (error) {
-        console.error('Failed to initialize meeting:', error);
+        logger.error('Failed to initialize meeting:', error);
       } finally {
         setIsLoading(false);
       }

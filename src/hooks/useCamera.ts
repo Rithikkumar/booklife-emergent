@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export const useCamera = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +22,7 @@ export const useCamera = () => {
       return image.dataUrl;
     } catch (error) {
       setIsLoading(false);
-      console.error('Error taking picture:', error);
+      logger.error('Error taking picture:', error);
       toast({
         title: "Camera Error",
         description: "Failed to take picture. Please try again.",
@@ -36,7 +37,7 @@ export const useCamera = () => {
       const permissions = await Camera.checkPermissions();
       return permissions.camera === 'granted';
     } catch (error) {
-      console.error('Error checking camera permissions:', error);
+      logger.error('Error checking camera permissions:', error);
       return false;
     }
   };
@@ -46,7 +47,7 @@ export const useCamera = () => {
       const permissions = await Camera.requestPermissions();
       return permissions.camera === 'granted';
     } catch (error) {
-      console.error('Error requesting camera permissions:', error);
+      logger.error('Error requesting camera permissions:', error);
       toast({
         title: "Permission Denied",
         description: "Camera access is required to take photos.",

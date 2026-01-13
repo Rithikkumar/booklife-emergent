@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Community } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const useJoinedCommunities = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -60,7 +61,7 @@ export const useJoinedCommunities = () => {
 
       setCommunities(formattedCommunities);
     } catch (err) {
-      console.error('Error fetching joined communities:', err);
+      logger.error('Error fetching joined communities:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch joined communities');
     } finally {
       setLoading(false);

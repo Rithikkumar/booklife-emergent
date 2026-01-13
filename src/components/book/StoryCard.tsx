@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import StoryComments from './StoryComments';
 import StoryReactions from './StoryReactions';
+import { logger } from '@/utils/logger';
 
 interface StoryEntry {
   id: string;
@@ -92,7 +93,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ bookId, entry, showComments = fal
       // Refresh the page to show updated story
       window.location.reload();
     } catch (error) {
-      console.error('Error updating story:', error);
+      logger.error('Error updating story:', error);
       toast.error('Failed to update story');
     } finally {
       setIsLoading(false);

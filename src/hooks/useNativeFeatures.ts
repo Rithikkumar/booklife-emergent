@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { logger } from '@/utils/logger';
 
 export const useNativeFeatures = () => {
   const [isNative, setIsNative] = useState(false);
@@ -32,7 +33,7 @@ export const useNativeFeatures = () => {
         await StatusBar.setBackgroundColor({ color: '#000000' });
       }
     } catch (error) {
-      console.error('Error configuring status bar:', error);
+      logger.error('Error configuring status bar:', error);
     }
   };
 
@@ -41,7 +42,7 @@ export const useNativeFeatures = () => {
       try {
         await Haptics.impact({ style });
       } catch (error) {
-        console.error('Error with haptic feedback:', error);
+        logger.error('Error with haptic feedback:', error);
       }
     }
   };
@@ -51,7 +52,7 @@ export const useNativeFeatures = () => {
       try {
         await Haptics.notification({ type });
       } catch (error) {
-        console.error('Error with haptic notification:', error);
+        logger.error('Error with haptic notification:', error);
       }
     }
   };

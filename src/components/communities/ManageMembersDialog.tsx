@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { 
+import { logger } from '@/utils/logger';
   Users, 
   Crown, 
   Shield, 
@@ -109,7 +110,7 @@ const ManageMembersDialog: React.FC<ManageMembersDialogProps> = ({
       setSelectedMember(null);
       setActionType(null);
     } catch (error) {
-      console.error('Error updating member role:', error);
+      logger.error('Error updating member role:', error);
       toast({
         title: "Error",
         description: "Failed to update member role",
@@ -140,7 +141,7 @@ const ManageMembersDialog: React.FC<ManageMembersDialogProps> = ({
       setSelectedMember(null);
       setActionType(null);
     } catch (error) {
-      console.error('Error removing member:', error);
+      logger.error('Error removing member:', error);
       toast({
         title: "Error",
         description: "Failed to remove member",

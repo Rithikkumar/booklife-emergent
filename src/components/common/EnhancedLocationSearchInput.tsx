@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { searchLocations, type LocationData } from '@/services/geocoding';
 import { debounce } from '@/utils/debounce';
+import { logger } from '@/utils/logger';
 
 export interface EnhancedLocationData {
   neighborhood?: string;
@@ -93,7 +94,7 @@ const EnhancedLocationSearchInput: React.FC<EnhancedLocationSearchInputProps> = 
         setSuggestions(results);
         setShowSuggestions(true);
       } catch (error) {
-        console.error('Error searching locations:', error);
+        logger.error('Error searching locations:', error);
         setSuggestions([]);
         setShowSuggestions(true); // Still show dropdown with error/help text
       } finally {

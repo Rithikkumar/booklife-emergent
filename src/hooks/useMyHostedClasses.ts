@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface HostedClass {
   id: string;
@@ -88,7 +89,7 @@ export const useMyHostedClasses = () => {
       setClasses(activeClasses);
       setError(null);
     } catch (err) {
-      console.error('Error fetching hosted classes:', err);
+      logger.error('Error fetching hosted classes:', err);
       setError('Failed to load your hosted classes');
     } finally {
       setLoading(false);

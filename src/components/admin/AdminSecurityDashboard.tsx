@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, Shield, Eye, Activity, RefreshCw } from 'lucide-react';
 import { useSecurityMonitoring } from "@/hooks/useSecurityMonitoring";
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface SecurityLog {
   id: string;
@@ -34,7 +35,7 @@ export const AdminSecurityDashboard = () => {
       const logs = JSON.parse(sessionStorage.getItem('securityLogs') || '[]');
       setSecurityLogs(logs.reverse()); // Show newest first
     } catch (error) {
-      console.error('Failed to load security logs:', error);
+      logger.error('Failed to load security logs:', error);
     }
   };
 

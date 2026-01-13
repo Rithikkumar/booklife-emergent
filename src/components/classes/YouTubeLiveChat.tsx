@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, MessageSquare, Pin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/utils/logger';
 
 interface ChatMessage {
   id: string;
@@ -71,7 +72,7 @@ const YouTubeLiveChat: React.FC<YouTubeLiveChatProps> = ({ classId, className })
       setMessages((data as ChatMessage[]) || []);
       setTimeout(scrollToBottom, 100);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      logger.error('Error loading messages:', error);
     }
   };
 

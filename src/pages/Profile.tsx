@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
+import { logger } from '@/utils/logger';
   BookOpen, 
   MapPin, 
   Users, 
@@ -193,7 +194,7 @@ const ProfilePage: React.FC = () => {
         }
 
       } catch (err) {
-        console.error('Error fetching profile:', err);
+        logger.error('Error fetching profile:', err);
         setError('Error loading profile');
       } finally {
         setLoading(false);
@@ -357,7 +358,7 @@ const ProfilePage: React.FC = () => {
         toast.success('Following successfully');
       }
     } catch (err) {
-      console.error('Error updating follow status:', err);
+      logger.error('Error updating follow status:', err);
       toast.error('Error updating follow status');
     }
   };
@@ -571,7 +572,7 @@ const ProfilePage: React.FC = () => {
                              if (error) throw error;
                              navigate(`/messages/${data}`);
                            } catch (err) {
-                             console.error('Error starting conversation:', err);
+                             logger.error('Error starting conversation:', err);
                              toast.error('Failed to start conversation');
                            }
                          }}

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useRateLimiter } from './useRateLimiter';
 import { setSecureCache, getSecureCache } from '@/utils/securityCache';
+import { logger } from '@/utils/logger';
 
 export interface ChatMessage {
   id: string;
@@ -80,7 +81,7 @@ export const useCommunityChat = (communityId?: string) => {
             // Don't fetch in background - prevents recursive loop
             return;
           } catch (e) {
-            console.error('Failed to parse cached messages:', e);
+            logger.error('Failed to parse cached messages:', e);
           }
         }
       }
@@ -130,7 +131,7 @@ export const useCommunityChat = (communityId?: string) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages:', error);
       toast({
         title: "Error",
         description: "Failed to load messages",
@@ -181,7 +182,7 @@ export const useCommunityChat = (communityId?: string) => {
         setMembers([]);
       }
     } catch (error) {
-      console.error('Error fetching members:', error);
+      logger.error('Error fetching members:', error);
     }
   }, [communityId]);
 
@@ -317,7 +318,7 @@ export const useCommunityChat = (communityId?: string) => {
       }
 
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       
       // Remove optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
@@ -399,7 +400,7 @@ export const useCommunityChat = (communityId?: string) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating reaction:', error);
+      logger.error('Error updating reaction:', error);
       // Rollback: Restore original reactions
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
@@ -432,7 +433,7 @@ export const useCommunityChat = (communityId?: string) => {
           const updatedCache = cachedMessages.filter((msg: ChatMessage) => msg.id !== messageId);
           setSecureCache(messageCacheKey, JSON.stringify(updatedCache));
         } catch (e) {
-          console.error('Failed to update cache:', e);
+          logger.error('Failed to update cache:', e);
         }
       }
     }
@@ -445,7 +446,7 @@ export const useCommunityChat = (communityId?: string) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error deleting message:', error);
+      logger.error('Error deleting message:', error);
       
       // Restore the message on error
       setMessages(prev => [...prev, messageToDelete].sort(
@@ -489,7 +490,7 @@ export const useCommunityChat = (communityId?: string) => {
         stopTyping();
       }, 5000);
     } catch (error) {
-      console.error('Failed to start typing:', error);
+      logger.error('Failed to start typing:', error);
     }
   }, [communityId]);
 
@@ -515,7 +516,7 @@ export const useCommunityChat = (communityId?: string) => {
         typingTimeoutRef.current = undefined;
       }
     } catch (error) {
-      console.error('Failed to stop typing:', error);
+      logger.error('Failed to stop typing:', error);
     }
   }, [communityId]);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface CommunityStats {
   activeCommunities: number;
@@ -50,7 +51,7 @@ export const useCommunityStats = () => {
           totalMessages: messagesCount || 0
         });
       } catch (err) {
-        console.error('Error fetching community stats:', err);
+        logger.error('Error fetching community stats:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch stats');
       } finally {
         setLoading(false);

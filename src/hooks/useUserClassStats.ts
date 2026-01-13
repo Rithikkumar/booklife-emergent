@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface UserClassStats {
   classesJoined: number;
@@ -75,7 +76,7 @@ export const useUserClassStats = () => {
         completedClasses: completedCount
       });
     } catch (error) {
-      console.error('Error fetching user class stats:', error);
+      logger.error('Error fetching user class stats:', error);
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Community } from '@/types';
 import { useCommunityAnalytics } from './useCommunityAnalytics';
+import { logger } from '@/utils/logger';
 
 export interface CommunityDetails extends Community {
   messageCount: number;
@@ -35,7 +36,7 @@ export const useCommunityDetails = (communityId?: string) => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Fetching community details for user:', user?.id);
+      logger.debug('Fetching community details for user:', user?.id);
 
       // Fetch community details
       const { data: communityData, error: communityError } = await supabase
@@ -62,7 +63,7 @@ export const useCommunityDetails = (communityId?: string) => {
         isUserMember = !!memberData;
         userRole = memberData?.role;
 
-        console.log('Membership check result:', { 
+        logger.debug('Membership check result:', { 
           isUserMember, 
           userRole, 
           memberData,
@@ -111,7 +112,7 @@ export const useCommunityDetails = (communityId?: string) => {
         guidelines: communityData.guidelines,
       };
 
-      console.log('Setting community data:', { 
+      logger.debug('Setting community data:', { 
         isUserMember: newCommunity.isUserMember,
         isMember: newCommunity.isMember,
         isJoined: newCommunity.isJoined 
@@ -120,7 +121,7 @@ export const useCommunityDetails = (communityId?: string) => {
       setCommunity(newCommunity);
 
     } catch (error) {
-      console.error('Error fetching community details:', error);
+      logger.error('Error fetching community details:', error);
       toast({
         title: "Error",
         description: "Failed to load community details",
@@ -136,7 +137,7 @@ export const useCommunityDetails = (communityId?: string) => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Refreshing membership status for user:', user?.id);
+      logger.debug('Refreshing membership status for user:', user?.id);
       
       if (!user) return;
 
@@ -151,7 +152,7 @@ export const useCommunityDetails = (communityId?: string) => {
       const isUserMember = !!memberData;
       const userRole = memberData?.role;
 
-      console.log('Membership refresh result:', { 
+      logger.debug('Membership refresh result:', { 
         isUserMember, 
         userRole, 
         memberData,
@@ -171,7 +172,7 @@ export const useCommunityDetails = (communityId?: string) => {
           isJoined: isUserMember,
         };
 
-        console.log('Updated community membership state:', {
+        logger.debug('Updated community membership state:', {
           isUserMember: updated.isUserMember,
           isMember: updated.isMember,
           isJoined: updated.isJoined
@@ -195,7 +196,7 @@ export const useCommunityDetails = (communityId?: string) => {
       }
 
     } catch (error) {
-      console.error('Error refreshing membership status:', error);
+      logger.error('Error refreshing membership status:', error);
     }
   }, [communityId]);
 
@@ -237,7 +238,7 @@ export const useCommunityDetails = (communityId?: string) => {
           });
 
         if (error) {
-          console.error('Error joining community:', error);
+          logger.error('Error joining community:', error);
           if (error.code === '23505') {
             toast({
               title: "Already Joined",
@@ -264,7 +265,7 @@ export const useCommunityDetails = (communityId?: string) => {
           fetchCommunityDetails(true);
         }, 100);
       } catch (error) {
-        console.error('Error joining community:', error);
+        logger.error('Error joining community:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         toast({
           title: "Error",
@@ -301,7 +302,7 @@ export const useCommunityDetails = (communityId?: string) => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error leaving community:', error);
+        logger.error('Error leaving community:', error);
         throw new Error(`Failed to leave community: ${error.message}`);
       }
 
@@ -321,7 +322,7 @@ export const useCommunityDetails = (communityId?: string) => {
         fetchCommunityDetails(true);
       }, 100);
     } catch (error) {
-      console.error('Error leaving community:', error);
+      logger.error('Error leaving community:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Error",
@@ -352,7 +353,7 @@ export const useCommunityDetails = (communityId?: string) => {
           filter: `community_id=eq.${communityId}`,
         },
         async (payload) => {
-          console.log('Membership change detected:', payload);
+          logger.debug('Membership change detected:', payload);
           // Refresh membership status when changes occur
           await refreshMembershipStatus();
           
@@ -369,7 +370,7 @@ export const useCommunityDetails = (communityId?: string) => {
           filter: `community_id=eq.${communityId}`,
         },
         async (payload) => {
-          console.log('Join request change detected:', payload);
+          logger.debug('Join request change detected:', payload);
           await refreshMembershipStatus();
         }
       )

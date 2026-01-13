@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface BookStats {
   followersCount: number;
@@ -83,7 +84,7 @@ export const useBookStats = (bookTitle?: string, bookAuthor?: string): BookStats
         error: null,
       });
     } catch (error) {
-      console.error('Error fetching book stats:', error);
+      logger.error('Error fetching book stats:', error);
       setStats(prev => ({
         ...prev,
         loading: false,

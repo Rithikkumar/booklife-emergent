@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+import { logger } from '@/utils/logger';
   PushNotifications,
   Token,
   PushNotificationSchema,
@@ -66,7 +67,7 @@ export const usePushNotifications = () => {
 
       // Listeners
       await PushNotifications.addListener('registration', async (token: Token) => {
-        console.log('Push registration success, token: ' + token.value);
+        logger.debug('Push registration success, token: ' + token.value);
         setPushToken(token.value);
         
         // Save token to database
@@ -78,21 +79,21 @@ export const usePushNotifications = () => {
             .eq('user_id', user.id);
           
           if (error) {
-            console.error('Error saving push token:', error);
+            logger.error('Error saving push token:', error);
           } else {
-            console.log('Push token saved successfully');
+            logger.debug('Push token saved successfully');
           }
         }
       });
 
       await PushNotifications.addListener('registrationError', (error: any) => {
-        console.error('Error on registration: ' + JSON.stringify(error));
+        logger.error('Error on registration: ' + JSON.stringify(error));
       });
 
       await PushNotifications.addListener(
         'pushNotificationReceived',
         (notification: PushNotificationSchema) => {
-          console.log('Push notification received: ' + JSON.stringify(notification));
+          logger.debug('Push notification received: ' + JSON.stringify(notification));
           toast({
             title: notification.title || "New Notification",
             description: notification.body || "",
@@ -103,7 +104,7 @@ export const usePushNotifications = () => {
       await PushNotifications.addListener(
         'pushNotificationActionPerformed',
         (notification: ActionPerformed) => {
-          console.log('Push notification action performed', notification);
+          logger.debug('Push notification action performed', notification);
           // Handle notification tap - navigate to relevant screen
           const data = notification.notification.data;
           if (data.url) {
@@ -112,13 +113,13 @@ export const usePushNotifications = () => {
             if (url.startsWith('/') || url.startsWith(window.location.origin)) {
               window.location.href = url;
             } else {
-              console.warn('Blocked potentially malicious redirect URL:', url);
+              logger.warn('Blocked potentially malicious redirect URL:', url);
             }
           }
         }
       );
     } catch (error) {
-      console.error('Error initializing push notifications:', error);
+      logger.error('Error initializing push notifications:', error);
     }
   };
 

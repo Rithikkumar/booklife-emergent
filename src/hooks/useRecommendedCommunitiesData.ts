@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Community } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const useRecommendedCommunitiesData = () => {
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -12,7 +13,7 @@ export const useRecommendedCommunitiesData = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('Generating fresh recommendations...');
+      logger.debug('Generating fresh recommendations...');
       
       // Call the edge function to generate recommendations
       const { error: genError } = await supabase.functions.invoke('generate-community-recommendations', {
@@ -22,12 +23,12 @@ export const useRecommendedCommunitiesData = () => {
       });
 
       if (genError) {
-        console.error('Error generating recommendations:', genError);
+        logger.error('Error generating recommendations:', genError);
       } else {
-        console.log('Recommendations generated successfully');
+        logger.debug('Recommendations generated successfully');
       }
     } catch (err) {
-      console.error('Error in generateRecommendations:', err);
+      logger.error('Error in generateRecommendations:', err);
     }
   };
 
@@ -56,7 +57,7 @@ export const useRecommendedCommunitiesData = () => {
 
       // If no recommendations exist or they're expired, generate new ones
       if (!recommendationsData || recommendationsData.length === 0) {
-        console.log('No existing recommendations found, generating new ones...');
+        logger.debug('No existing recommendations found, generating new ones...');
         await generateRecommendations();
         
         // Fetch the newly generated recommendations
@@ -84,7 +85,7 @@ export const useRecommendedCommunitiesData = () => {
         await fetchCommunitiesData(recommendationsData, communityIds, user.id);
       }
     } catch (err) {
-      console.error('Error fetching recommended communities:', err);
+      logger.error('Error fetching recommended communities:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch recommended communities');
     } finally {
       setLoading(false);
@@ -148,7 +149,7 @@ export const useRecommendedCommunitiesData = () => {
   }, []);
 
   const refreshCommunities = async () => {
-    console.log('Refreshing recommendations...');
+    logger.debug('Refreshing recommendations...');
     // Force generate new recommendations
     await generateRecommendations();
     // Then fetch the updated data

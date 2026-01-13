@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface BookClass {
   id: string;
@@ -45,7 +46,7 @@ export const useAllBookClasses = () => {
 
       setClasses(data || []);
     } catch (err) {
-      console.error('Error fetching all classes:', err);
+      logger.error('Error fetching all classes:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch classes');
     } finally {
       setLoading(false);

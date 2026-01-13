@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BookOpen, MapPin, User, Calendar, ArrowRight, QrCode } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { BookCover } from '@/utils/bookCovers';
+import { logger } from '@/utils/logger';
 
 interface BookInfo {
   id: string;
@@ -60,7 +61,7 @@ const ScanBook: React.FC = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error fetching book:', error);
+          logger.error('Error fetching book:', error);
           // Book not found, redirect to register new book with code pre-filled
           navigate(`/register-book?code=${code}&tab=new-book`);
           return;
@@ -92,7 +93,7 @@ const ScanBook: React.FC = () => {
           owner_display_name: ownerInfo.display_name,
         });
       } catch (err) {
-        console.error('Error:', err);
+        logger.error('Error:', err);
         navigate(`/register-book?code=${code}&tab=new-book`);
       } finally {
         setLoading(false);

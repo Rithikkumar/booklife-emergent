@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface JoinRequest {
   id: string;
@@ -90,7 +91,7 @@ export const useCommunityJoinRequests = (communityId?: string) => {
         setUserJoinRequest(userRequest as JoinRequest | null);
       }
     } catch (error) {
-      console.error('Error fetching join requests:', error);
+      logger.error('Error fetching join requests:', error);
       toast({
         title: "Error",
         description: "Failed to fetch join requests",
@@ -123,7 +124,7 @@ export const useCommunityJoinRequests = (communityId?: string) => {
 
       await fetchJoinRequests();
     } catch (error: any) {
-      console.error('Error sending join request:', error);
+      logger.error('Error sending join request:', error);
       toast({
         title: "Error",
         description: error.message.includes('duplicate') 
@@ -152,7 +153,7 @@ export const useCommunityJoinRequests = (communityId?: string) => {
 
       setUserJoinRequest(null);
     } catch (error: any) {
-      console.error('Error cancelling join request:', error);
+      logger.error('Error cancelling join request:', error);
       toast({
         title: "Error",
         description: "Failed to cancel join request",
@@ -177,7 +178,7 @@ export const useCommunityJoinRequests = (communityId?: string) => {
 
       await fetchJoinRequests();
     } catch (error: any) {
-      console.error('Error processing join request:', error);
+      logger.error('Error processing join request:', error);
       toast({
         title: "Error",
         description: "Failed to process join request",

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useCommunityJoinRequests } from '@/hooks/useCommunityJoinRequests';
+import { logger } from '@/utils/logger';
 
 interface JoinRequestDialogProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export const JoinRequestDialog = ({
       onClose();
       setMessage('');
     } catch (error) {
-      console.error('Error sending join request:', error);
+      logger.error('Error sending join request:', error);
     } finally {
       setIsSubmitting(false);
     }

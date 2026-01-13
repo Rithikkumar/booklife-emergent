@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
+import { logger } from '@/utils/logger';
   Users, 
   Crown, 
   Shield, 
@@ -40,7 +41,7 @@ const CommunityAbout: React.FC<CommunityAboutProps> = ({
   const { analytics, loading: analyticsLoading } = useCommunityAnalytics(community.id);
   
   // Debug logging
-  console.log('CommunityAbout analytics:', { analytics, loading: analyticsLoading });
+  logger.debug('CommunityAbout analytics:', { analytics, loading: analyticsLoading });
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':

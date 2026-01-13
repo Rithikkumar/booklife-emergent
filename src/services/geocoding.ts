@@ -1,4 +1,5 @@
 import { validateNominatimResponse, type ValidatedNominatimResult } from '@/utils/apiValidation';
+import { logger } from '@/utils/logger';
 
 export interface LocationData {
   neighborhood?: string;
@@ -39,7 +40,7 @@ function initCache() {
         });
       }
     } catch (e) {
-      console.warn('Failed to load location cache from localStorage');
+      logger.warn('Failed to load location cache from localStorage');
     }
   }
 }
@@ -56,7 +57,7 @@ function saveCache() {
       });
       localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(cacheObj));
     } catch (e) {
-      console.warn('Failed to save location cache to localStorage');
+      logger.warn('Failed to save location cache to localStorage');
     }
   }, 1000);
 }

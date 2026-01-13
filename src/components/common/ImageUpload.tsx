@@ -8,6 +8,7 @@ import { useCamera } from '@/hooks/useCamera';
 import { useNativeFeatures } from '@/hooks/useNativeFeatures';
 import { CameraSource } from '@capacitor/camera';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface ImageUploadProps {
   label?: string;
@@ -82,7 +83,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }
       }
     } catch (error) {
-      console.warn('Could not clean up old files:', error);
+      logger.warn('Could not clean up old files:', error);
     }
 
     const { error } = await supabase.storage
@@ -119,7 +120,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         toast.success('Image selected');
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error:', error);
       toast.error('Error uploading image. Please try again.');
     } finally {
       setUploading(false);
@@ -171,7 +172,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             .remove([decodeURIComponent(filePath)]);
         }
       } catch (error) {
-        console.error('Error deleting image from storage:', error);
+        logger.error('Error deleting image from storage:', error);
       }
     }
     onChange(null, "");

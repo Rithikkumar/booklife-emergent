@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import LocationSearchInput from '@/components/common/LocationSearchInput';
+import { logger } from '@/utils/logger';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       await onSave(formData);
       onClose();
     } catch (error) {
-      console.error('Error saving profile:', error);
+      logger.error('Error saving profile:', error);
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export type ClassFilterType = 
   | 'trending'
@@ -71,7 +72,7 @@ export const useBookClassesSearch = () => {
       });
 
       if (error) {
-        console.error('Error fetching classes:', error);
+        logger.error('Error fetching classes:', error);
         setError('Failed to fetch classes');
         toast.error('Failed to load classes');
         return;
@@ -79,7 +80,7 @@ export const useBookClassesSearch = () => {
 
       setClasses(data || []);
     } catch (err) {
-      console.error('Unexpected error:', err);
+      logger.error('Unexpected error:', err);
       setError('An unexpected error occurred');
       toast.error('Failed to load classes');
     } finally {

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Printer, Loader2, BookOpen, QrCode, AlertCircle } from "lucide-react";
 import QRCode from "qrcode";
+import { logger } from '@/utils/logger';
 
 interface BookData {
   title: string;
@@ -182,7 +183,7 @@ const PrintStickers = () => {
         description: `Generated ${stickerCount} stickers for "${selectedBook.title}"`
       });
     } catch (error: any) {
-      console.error('Error generating stickers:', error);
+      logger.error('Error generating stickers:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to generate stickers",

@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 // Maximum allowed lengths for text fields from external APIs
 const MAX_TITLE_LENGTH = 500;
@@ -76,7 +77,7 @@ export const validateOpenLibraryResponse = (data: unknown): ValidatedOpenLibrary
   const result = OpenLibrarySearchResultSchema.safeParse(data);
   
   if (!result.success) {
-    console.warn('OpenLibrary response validation failed:', result.error.errors);
+    logger.warn('OpenLibrary response validation failed:', result.error.errors);
     return { docs: [] };
   }
   
@@ -113,7 +114,7 @@ export const validateGoogleBooksResponse = (data: unknown): ValidatedGoogleBooks
   const result = GoogleBooksResultSchema.safeParse(data);
   
   if (!result.success) {
-    console.warn('Google Books response validation failed:', result.error.errors);
+    logger.warn('Google Books response validation failed:', result.error.errors);
     return { items: [] };
   }
   
@@ -164,7 +165,7 @@ export const validateNominatimResponse = (data: unknown): ValidatedNominatimResu
   const result = NominatimResultsSchema.safeParse(data);
   
   if (!result.success) {
-    console.warn('Nominatim response validation failed:', result.error.errors);
+    logger.warn('Nominatim response validation failed:', result.error.errors);
     return [];
   }
   

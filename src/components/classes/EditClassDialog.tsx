@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import BookSearchInput from "@/components/common/BookSearchInput";
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeInput } from "@/components/common/FormValidation";
+import { logger } from '@/utils/logger';
 
 interface EditClassDialogProps {
   open: boolean;
@@ -204,13 +205,13 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
         });
 
         if (emailError) {
-          console.error('Failed to send update emails:', emailError);
+          logger.error('Failed to send update emails:', emailError);
           // Don't fail the save if email fails - just log it
         } else {
-          console.log('Update notification emails sent successfully');
+          logger.debug('Update notification emails sent successfully');
         }
       } catch (emailErr) {
-        console.error('Error invoking send-class-email function:', emailErr);
+        logger.error('Error invoking send-class-email function:', emailErr);
       }
 
       toast({
@@ -222,7 +223,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
       onSave?.();
       window.dispatchEvent(new CustomEvent('classCreated'));
     } catch (error: any) {
-      console.error('Error updating class:', error);
+      logger.error('Error updating class:', error);
       toast({
         title: "Error updating class",
         description: error.message || "Please try again.",

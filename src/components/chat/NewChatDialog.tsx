@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
-import { logger } from '@/utils/logger';
   Dialog,
   DialogContent,
   DialogHeader,
@@ -13,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Loader2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/utils/logger';
 
 interface User {
   user_id: string;

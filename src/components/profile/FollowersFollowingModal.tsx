@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Lock, User, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
-import { logger } from '@/utils/logger';
   Dialog,
   DialogContent,
   DialogHeader,
@@ -12,6 +11,7 @@ import { logger } from '@/utils/logger';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { logger } from '@/utils/logger';
 
 interface FollowersFollowingModalProps {
   isOpen: boolean;

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-import { logger } from '@/utils/logger';
   PushNotifications,
   Token,
   PushNotificationSchema,
@@ -8,6 +7,7 @@ import { logger } from '@/utils/logger';
 } from '@capacitor/push-notifications';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 export const usePushNotifications = () => {
   const [pushToken, setPushToken] = useState<string | null>(null);

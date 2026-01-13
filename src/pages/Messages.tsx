@@ -117,6 +117,7 @@ const Messages: React.FC = () => {
               onNewChat={() => setShowNewChat(true)}
               onNewGroup={() => setShowNewGroup(true)}
               className="h-[calc(100%-60px)]"
+              hideHeader={true}
             />
           </div>
         </div>

@@ -630,13 +630,20 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
     // Subscribe to typing indicators
     const typingChannel = supabase
       .channel(`typing:${roomId}`)
-      .on('broadcast', { event: 'typing' }, async (payload) => {
+      .on('broadcast', { event: 'typing' }, (payload) => {
         const { user_id, typing } = payload.payload as { user_id: string; typing: boolean };
         
         if (user_id === currentUserId) return;
 
+        // P2 FIX: Clear any existing timeout for this user to prevent memory leak
+        const existingTimeout = typingDisplayTimeoutRefs.current.get(user_id);
+        if (existingTimeout) {
+          clearTimeout(existingTimeout);
+          typingDisplayTimeoutRefs.current.delete(user_id);
+        }
+
         if (typing) {
-          // Fetch user profile if needed
+          // Add user to typing list
           const member = members.find(m => m.user_id === user_id);
           if (member?.profile) {
             setTypingUsers(prev => {
@@ -648,14 +655,16 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
               }];
             });
           }
+
+          // P2 FIX: Set new timeout with proper tracking
+          const timeoutId = setTimeout(() => {
+            setTypingUsers(prev => prev.filter(u => u.user_id !== user_id));
+            typingDisplayTimeoutRefs.current.delete(user_id);
+          }, CHAT_CONFIG.TYPING_DISPLAY_TIMEOUT);
+          typingDisplayTimeoutRefs.current.set(user_id, timeoutId);
         } else {
           setTypingUsers(prev => prev.filter(u => u.user_id !== user_id));
         }
-
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-          setTypingUsers(prev => prev.filter(u => u.user_id !== user_id));
-        }, 3000);
       })
       .subscribe();
 
@@ -665,6 +674,9 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
+      // P2 FIX: Clear all typing display timeouts on cleanup
+      typingDisplayTimeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+      typingDisplayTimeoutRefs.current.clear();
     };
   }, [roomId, currentUserId, fetchMessages, fetchMembers, members]);
 

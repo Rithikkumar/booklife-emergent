@@ -205,7 +205,7 @@ const BookDetails: React.FC = () => {
   return (
     <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`book-${id}`}>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 max-w-7xl">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12 max-w-7xl">
         {/* Back button */}
         <button 
           type="button"

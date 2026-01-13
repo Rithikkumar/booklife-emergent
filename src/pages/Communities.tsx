@@ -7,13 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Compass } from "lucide-react";
 import {
-import { logger } from '@/utils/logger';
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { logger } from '@/utils/logger';
 
 import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import ThreeColumnLayout from '@/components/common/ThreeColumnLayout';

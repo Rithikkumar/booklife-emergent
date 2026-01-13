@@ -131,49 +131,53 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
       if (sendTypingIndicator) {
         sendTypingIndicator(false);
       }
-    }, 3000);
+    }, CHAT_CONFIG.TYPING_TIMEOUT);
   };
 
   const handleEmojiSelect = (emoji: string) => {
     setCurrentMessage(prev => prev + emoji);
   };
 
-  const handleReaction = async (messageId: string, emoji: string) => {
-    await addReaction(messageId, emoji);
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } else if (diffInHours < 168) {
-      return date.toLocaleDateString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-    }
-  };
-
-  const renderMessage = (message: any) => {
-    const isSent = message.sender_id === currentUserId;
+  const renderMessage = (message: DirectMessage) => {
+    const isSent = message.sender_id === hookUserId;
 
     return (
-      <MessageBubble
-        key={message.id}
-        message={message.message}
-        timestamp={message.created_at}
-        isSent={isSent}
-        senderName={message.sender?.display_name || message.sender?.username}
-        senderAvatar={message.sender?.profile_picture_url}
-        isRead={message.is_read}
-        isDelivered={true}
-        replyTo={message.reply_to ? {
-          message: message.reply_to.message,
-          senderName: message.reply_to.sender?.display_name || message.reply_to.sender?.username || 'Unknown'
-        } : undefined}
-      />
+      <div key={message.id} className="relative">
+        <MessageBubble
+          message={message.message}
+          timestamp={message.created_at}
+          isSent={isSent}
+          senderName={message.sender?.display_name || message.sender?.username}
+          senderAvatar={message.sender?.profile_picture_url}
+          isRead={message.is_read}
+          isDelivered={!message.isTemp}
+          replyTo={message.reply_to ? {
+            message: message.reply_to.message,
+            senderName: message.reply_to.sender?.display_name || message.reply_to.sender?.username || 'Unknown'
+          } : undefined}
+        />
+        {/* Failed message retry button */}
+        {message.isFailed && (
+          <div className="flex justify-end mt-1 pr-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => retryMessage(message.id)}
+              className="h-6 text-xs text-destructive hover:text-destructive"
+              data-testid={`retry-message-${message.id}`}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Retry
+            </Button>
+          </div>
+        )}
+        {/* Sending indicator */}
+        {message.isTemp && !message.isFailed && (
+          <div className="flex justify-end mt-1 pr-2">
+            <span className="text-xs text-muted-foreground">Sending...</span>
+          </div>
+        )}
+      </div>
     );
   };
 

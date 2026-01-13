@@ -59,15 +59,10 @@ interface UseChatOptions {
   pageSize?: number;
 }
 
-// Rate limiting constants
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 15; // 15 messages per minute
-
 // Cache key prefix
 const CACHE_PREFIX = 'chat_messages_';
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
-export const useChat = ({ roomId, pageSize = 50 }: UseChatOptions) => {
+export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [members, setMembers] = useState<ChatRoomMember[]>([]);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);

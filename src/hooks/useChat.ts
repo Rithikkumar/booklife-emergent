@@ -77,6 +77,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
   const [retryAfter, setRetryAfter] = useState(0);
   
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingDisplayTimeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const isTypingRef = useRef(false);
   const { toast } = useToast();
 

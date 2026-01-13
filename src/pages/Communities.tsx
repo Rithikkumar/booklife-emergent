@@ -27,6 +27,7 @@ import RecommendedCommunities from '@/components/communities/RecommendedCommunit
 import CreateCommunityDialog from '@/components/communities/CreateCommunityDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Community } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAllCommunities } from '@/hooks/useAllCommunities';
 import { useJoinedCommunities } from '@/hooks/useJoinedCommunities';
 import { useCreatedCommunities } from '@/hooks/useCreatedCommunities';
@@ -43,9 +44,9 @@ const Communities = () => {
   const [activeSection, setActiveSection] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<CommunityFilterType[]>([]);
-  const [user, setUser] = useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Use centralized auth context
+  const { user, isAuthenticated, isLoading: isCheckingAuth } = useAuth();
 
   // Use different hooks based on active section
   const allCommunities = useAllCommunities();
@@ -59,32 +60,12 @@ const Communities = () => {
   const { activity: userActivity, loading: activityLoading } = useUserActivity();
   const { community: communityOfWeek, loading: communityWeekLoading } = useCommunityOfTheWeek();
 
-  // Check authentication status
+  // Handle auth-required section redirect
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setIsAuthenticated(!!session?.user);
-        setIsCheckingAuth(false);
-        
-        // If user logs out and is on an auth-required section, switch to 'all'
-        if (!session?.user && ['joined', 'created', 'recommended'].includes(activeSection)) {
-          setActiveSection('all');
-        }
-      }
-    );
-
-    // THEN check for existing session (synchronous from localStorage)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user);
-      setIsCheckingAuth(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [activeSection]);
-
+    if (!isAuthenticated && !isCheckingAuth && ['joined', 'created', 'recommended'].includes(activeSection)) {
+      setActiveSection('all');
+    }
+  }, [isAuthenticated, isCheckingAuth, activeSection]);
   // Get the current data based on active section
   const getCurrentData = () => {
     switch (activeSection) {
@@ -267,17 +248,20 @@ const Communities = () => {
             Connect with fellow book lovers and join discussions
           </p>
         </div>
-        {isCheckingAuth ? (
-          <Button disabled className="opacity-50">
-            Loading...
-          </Button>
-        ) : isAuthenticated ? (
-          <CreateCommunityDialog onCreateCommunity={handleCreateCommunity} />
-        ) : (
-          <Button onClick={() => navigate('/auth')}>
-            Sign in to Create
-          </Button>
-        )}
+        {/* Fixed-width container for auth-dependent button to prevent layout shift */}
+        <div className="flex-shrink-0" style={{ minWidth: '150px' }}>
+          {isCheckingAuth ? (
+            <Button disabled className="w-full opacity-50">
+              <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+            </Button>
+          ) : isAuthenticated ? (
+            <CreateCommunityDialog onCreateCommunity={handleCreateCommunity} />
+          ) : (
+            <Button onClick={() => navigate('/auth')} className="w-full">
+              Sign in to Create
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -520,7 +504,7 @@ const Communities = () => {
   );
 
   return (
-    <ScrollRestoreLayout>
+    <ScrollRestoreLayout scrollKey="communities">
 
       {/* Mobile Section Tabs */}
       <MobileSectionTabs

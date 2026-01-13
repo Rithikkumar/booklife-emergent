@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Users, Activity, Info } from 'lucide-react';
-import PageLayout from '@/components/common/PageLayout';
+import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import CommunityHeader from '@/components/communities/CommunityHeader';
 import CommunityChat from '@/components/communities/CommunityChat';
 import CommunityMembersGrid from '@/components/communities/CommunityMembersGrid';
@@ -41,7 +41,7 @@ const CommunityDetail: React.FC = () => {
 
   if (communityLoading) {
     return (
-      <PageLayout>
+      <ScrollRestoreLayout scrollKey={`community-${communityId}`}>
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* Header Skeleton */}
           <Card>
@@ -68,13 +68,13 @@ const CommunityDetail: React.FC = () => {
             <Skeleton className="h-96 w-full" />
           </div>
         </div>
-      </PageLayout>
+      </ScrollRestoreLayout>
     );
   }
 
   if (!community) {
     return (
-      <PageLayout>
+      <ScrollRestoreLayout scrollKey={`community-${communityId}`}>
         <div className="container mx-auto px-4 py-6">
           <Card>
             <CardContent className="p-6 text-center">
@@ -82,7 +82,7 @@ const CommunityDetail: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </PageLayout>
+      </ScrollRestoreLayout>
     );
   }
 
@@ -142,7 +142,7 @@ const CommunityDetail: React.FC = () => {
   };
 
   return (
-    <PageLayout>
+    <ScrollRestoreLayout scrollKey={`community-${communityId}`}>
       <div className="container mx-auto px-4 pb-4 space-y-4 -mt-4 md:-mt-6">
         {/* Back Navigation */}
         <button 
@@ -193,7 +193,7 @@ const CommunityDetail: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </PageLayout>
+    </ScrollRestoreLayout>
   );
 };
 

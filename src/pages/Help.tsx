@@ -1,282 +1,225 @@
 import React from 'react';
-import { ArrowLeft, HelpCircle, MessageCircle, Book, Mail, Phone, ExternalLink } from 'lucide-react';
+import { 
+  BookOpen, 
+  Users, 
+  Search, 
+  MessageCircle, 
+  Settings, 
+  Lock, 
+  MapPin, 
+  Heart,
+  Sparkles,
+  ArrowRight,
+  ChevronRight
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const Help = () => {
   const navigate = useNavigate();
 
-  const FAQItem = ({ question, answer }: { question: string; answer: string }) => (
-    <div className="py-4">
-      <h3 className="text-sm font-medium text-foreground mb-2">{question}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed">{answer}</p>
-    </div>
-  );
+  const features = [
+    {
+      icon: BookOpen,
+      title: "Add Your Books",
+      description: "Keep track of all the books you own. Add a title, author, and even a cover photo!",
+      action: "Add a Book",
+      path: "/register-book",
+      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+    },
+    {
+      icon: Search,
+      title: "Explore Books",
+      description: "Discover books from readers all around. Find new stories to read!",
+      action: "Start Exploring",
+      path: "/explore",
+      color: "bg-green-500/10 text-green-600 dark:text-green-400"
+    },
+    {
+      icon: Users,
+      title: "Join Communities",
+      description: "Meet other book lovers! Chat about your favorite stories together.",
+      action: "Find Communities",
+      path: "/communities",
+      color: "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+    },
+    {
+      icon: MessageCircle,
+      title: "Book Classes",
+      description: "Join live video chats to talk about books with other readers.",
+      action: "Join a Class",
+      path: "/book-classes",
+      color: "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+    }
+  ];
 
-  const ContactOption = ({ 
-    icon: Icon, 
-    title, 
-    description, 
-    action,
-    href
-  }: {
-    icon: any;
-    title: string;
-    description: string;
-    action: string;
-    href?: string;
-  }) => (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Icon className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-foreground mb-1">{title}</h3>
-            <p className="text-xs text-muted-foreground mb-3">{description}</p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => href && window.open(href, '_blank')}
-              className="h-8"
-            >
-              {action}
-              {href && <ExternalLink className="h-3 w-3 ml-2" />}
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const faqs = [
+    {
+      question: "How do I add my first book?",
+      answer: "Tap 'Add a Book' from the home screen or menu. Type in the book's title and author, then save it. That's it! Your book will show up on your profile."
+    },
+    {
+      question: "How do I make my account private?",
+      answer: "Go to Settings (the gear icon) → tap on 'Private Account' toggle. When private, only people you approve can see your books."
+    },
+    {
+      question: "How do I show my location on my profile?",
+      answer: "First, make sure you've added a location in Edit Profile. Then go to Settings → turn on 'Show Location'. If you haven't added a location yet, it won't show anything!"
+    },
+    {
+      question: "How do I change how the app looks?",
+      answer: "Go to Settings → Appearance → Theme. Pick Light (bright), Dark (easy on eyes at night), or System (matches your phone settings)."
+    },
+    {
+      question: "How do I join a book class?",
+      answer: "Tap 'Book Classes' in the menu. You'll see live and upcoming classes. Tap 'Join' on any class you like!"
+    },
+    {
+      question: "How do I follow someone?",
+      answer: "Visit their profile and tap the 'Follow' button. You'll see their new books and activities in your feed!"
+    },
+    {
+      question: "How do I message someone?",
+      answer: "Go to their profile and tap 'Message'. You can chat about books, recommend reads, or just say hi!"
+    },
+    {
+      question: "How do I change my profile picture?",
+      answer: "Go to Edit Profile → tap on your profile picture → choose 'Upload new photo' and pick an image from your device."
+    }
+  ];
 
   return (
     <ScrollRestoreLayout>
-      <div className="max-w-4xl mx-auto py-6">
+      <div className="max-w-3xl mx-auto py-8 px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Help Center</h1>
-          <p className="text-sm text-muted-foreground">Find answers and get support</p>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">How Can We Help? 📚</h1>
+          <p className="text-muted-foreground text-lg">
+            Everything you need to know about using the app
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Getting Started */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Book className="h-5 w-5" />
-                  <span>Getting Started</span>
-                </CardTitle>
-                <CardDescription>
-                  Learn the basics of using our book sharing platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-auto p-4"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Setting up your profile</p>
-                      <p className="text-xs text-muted-foreground">Complete your profile to start connecting with other readers</p>
-                    </div>
-                  </Button>
-                  <Separator />
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-auto p-4"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Registering your first book</p>
-                      <p className="text-xs text-muted-foreground">Learn how to add books to your personal library</p>
-                    </div>
-                  </Button>
-                  <Separator />
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-auto p-4"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Joining book classes</p>
-                      <p className="text-xs text-muted-foreground">Discover how to participate in virtual book discussions</p>
-                    </div>
-                  </Button>
-                  <Separator />
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-auto p-4"
-                  >
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Following other readers</p>
-                      <p className="text-xs text-muted-foreground">Build your reading community by connecting with others</p>
-                    </div>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* FAQ */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <HelpCircle className="h-5 w-5" />
-                  <span>Frequently Asked Questions</span>
-                </CardTitle>
-                <CardDescription>
-                  Quick answers to common questions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  <FAQItem
-                    question="How do I make my profile private?"
-                    answer="Go to Settings > Account and toggle the 'Private Account' option. When your account is private, only approved followers can see your book collection."
-                  />
-                  <Separator />
-                  <FAQItem
-                    question="Can I host my own book classes?"
-                    answer="Yes! Navigate to Book Classes and click 'Host a Class'. You can schedule discussions for any book and invite other readers to join."
-                  />
-                  <Separator />
-                  <FAQItem
-                    question="How do I find books in my area?"
-                    answer="Use the Explore page to search for books by location. You can filter results by city to find books available near you."
-                  />
-                  <Separator />
-                  <Separator />
-                  <FAQItem
-                    question="How do I delete a book from my collection?"
-                    answer="Go to your profile, select the Books tab, find the book you want to remove, and use the delete option. This action cannot be undone."
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Platform Features</CardTitle>
-                <CardDescription>
-                  Explore what you can do on our platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="text-sm font-medium mb-2">Book Registration</h3>
-                    <p className="text-xs text-muted-foreground">Track your personal book collection with detailed information and sharing options.</p>
+        {/* What You Can Do */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Heart className="h-5 w-5 text-primary" />
+            What You Can Do
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {features.map((feature) => (
+              <Card 
+                key={feature.title} 
+                className="group cursor-pointer hover:shadow-md transition-all duration-200 border-2 hover:border-primary/20"
+                onClick={() => navigate(feature.path)}
+              >
+                <CardContent className="p-5">
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${feature.color} mb-3`}>
+                    <feature.icon className="h-5 w-5" />
                   </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="text-sm font-medium mb-2">Book Communities</h3>
-                    <p className="text-xs text-muted-foreground">Join communities, share book recommendations, and connect with other book enthusiasts.</p>
+                  <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
+                  <div className="flex items-center text-sm font-medium text-primary group-hover:underline">
+                    {feature.action}
+                    <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="text-sm font-medium mb-2">Virtual Classes</h3>
-                    <p className="text-xs text-muted-foreground">Join or host live book discussions and reading sessions.</p>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h3 className="text-sm font-medium mb-2">Communities</h3>
-                    <p className="text-xs text-muted-foreground">Discover and join communities based on your reading interests.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        </section>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Contact Support */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Need More Help?</CardTitle>
-                <CardDescription>
-                  Get in touch with our support team
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ContactOption
-                  icon={MessageCircle}
-                  title="Live Chat"
-                  description="Chat with our support team in real-time"
-                  action="Start Chat"
-                />
-                <ContactOption
-                  icon={Mail}
-                  title="Email Support"
-                  description="Send us a detailed message"
-                  action="Send Email"
-                  href="mailto:support@booksharing.com"
-                />
-                <ContactOption
-                  icon={Phone}
-                  title="Phone Support"
-                  description="Call us during business hours"
-                  action="Call Now"
-                  href="tel:+1-555-0123"
-                />
-              </CardContent>
-            </Card>
+        {/* Common Questions */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-primary" />
+            Common Questions
+          </h2>
+          <Card>
+            <CardContent className="p-0">
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.map((faq, index) => (
+                  <AccordionItem 
+                    key={index} 
+                    value={`item-${index}`}
+                    className="border-b last:border-b-0"
+                  >
+                    <AccordionTrigger className="px-5 py-4 text-left hover:no-underline hover:bg-accent/50">
+                      <span className="font-medium text-foreground">{faq.question}</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-5 pb-4 text-muted-foreground">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </section>
 
-            {/* Quick Links */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Links</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => navigate('/settings')}
-                >
-                  Account Settings
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => navigate('/communities')}
-                >
-                  Browse Communities
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => navigate('/book-classes')}
-                >
-                  Join Book Classes
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => navigate('/register-book')}
-                >
-                  Add a Book
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">System Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2 text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-muted-foreground">All systems operational</span>
+        {/* Quick Settings Shortcuts */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Settings className="h-5 w-5 text-primary" />
+            Quick Shortcuts
+          </h2>
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              variant="outline"
+              className="justify-between h-auto py-4 px-5"
+              onClick={() => navigate('/settings')}
+            >
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <p className="font-medium">Privacy Settings</p>
+                  <p className="text-xs text-muted-foreground">Make your account private</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Last updated: 2 minutes ago
-                </p>
-              </CardContent>
-            </Card>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-between h-auto py-4 px-5"
+              onClick={() => navigate('/edit-profile')}
+            >
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <p className="font-medium">Edit Profile</p>
+                  <p className="text-xs text-muted-foreground">Update your info and location</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
           </div>
-        </div>
+        </section>
+
+        {/* Still Need Help */}
+        <section>
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="p-6 text-center">
+              <div className="text-4xl mb-3">🤔</div>
+              <h3 className="font-semibold text-foreground mb-2">Still have questions?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Don't worry! Just explore the app and try things out. You can always come back here if you get stuck.
+              </p>
+              <Button onClick={() => navigate('/explore')}>
+                Start Exploring
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </ScrollRestoreLayout>
   );

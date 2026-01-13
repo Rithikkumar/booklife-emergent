@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, MapPin, Clock, ArrowLeft, Loader2, Check } from 'lucide-react';
-import Navigation from "@/components/ui/navigation";
+import { BookOpen, MapPin, Clock, ArrowLeft, Loader2, Check, Minus } from 'lucide-react';
+import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -169,23 +169,21 @@ const BookDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="pt-20 pb-12 flex items-center justify-center">
+      <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`book-${id}`}>
+        <div className="pt-8 pb-12 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="animate-spin h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
             <p className="text-muted-foreground">Loading book details...</p>
           </div>
         </div>
-      </div>
+      </ScrollRestoreLayout>
     );
   }
 
   if (error || !book) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 pt-20 pb-12">
+      <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`book-${id}`}>
+        <div className="container mx-auto px-4 pt-8 pb-12">
         <button 
           type="button"
           onClick={handleGoBack}
@@ -200,15 +198,14 @@ const BookDetails: React.FC = () => {
             </p>
           </div>
         </div>
-      </div>
+      </ScrollRestoreLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`book-${id}`}>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 max-w-7xl">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 max-w-7xl">
         {/* Back button */}
         <button 
           type="button"
@@ -252,24 +249,34 @@ const BookDetails: React.FC = () => {
                 </div>
               </div>
 
-              <Button 
-                onClick={handleFollowClick}
-                className={`w-full gap-2 ${isBookFollowed(book.title, book.author) ? 'border-2 border-primary text-primary bg-primary/15 hover:bg-primary/25 font-bold shadow-sm' : ''}`}
-                variant={isBookFollowed(book.title, book.author) ? "outline" : "default"}
-                disabled={isBookFollowed(book.title, book.author)}
-              >
-                {isBookFollowed(book.title, book.author) ? (
-                  <>
-                    <Check className="h-4 w-4 font-bold" />
+              {isBookFollowed(book.title, book.author) ? (
+                <div className="flex items-center gap-2 w-full">
+                  <Button 
+                    variant="outline"
+                    className="flex-1 border-2 border-primary text-primary bg-primary/15 font-bold shadow-sm cursor-default pointer-events-none"
+                  >
+                    <Check className="h-4 w-4" />
                     Following
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="h-4 w-4" />
-                    Follow Journey
-                  </>
-                )}
-              </Button>
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="flex-shrink-0 border-muted-foreground/40 text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:border-muted-foreground/60"
+                    onClick={handleFollowClick}
+                  >
+                    <Minus className="h-4 w-4" />
+                    Unfollow
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleFollowClick}
+                  className="w-full gap-2"
+                  variant="default"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Follow Journey
+                </Button>
+              )}
             </div>
             
             {/* Current Owner Section */}
@@ -427,7 +434,7 @@ const BookDetails: React.FC = () => {
 
         {/* Owners Modal - Remove since we're using single owner now */}
       </div>
-    </div>
+    </ScrollRestoreLayout>
   );
 };
 

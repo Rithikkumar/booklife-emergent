@@ -298,7 +298,9 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-primary" />
+              <div className="p-1.5 bg-gradient-primary rounded-lg shadow-glow">
+                <BookOpen className="h-5 w-5 text-primary-foreground" />
+              </div>
               <span className="text-xl font-bold">BookPassing</span>
             </div>
             

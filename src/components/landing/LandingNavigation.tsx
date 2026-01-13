@@ -48,7 +48,9 @@ const LandingNavigation: React.FC<LandingNavigationProps> = ({ onNavigate }) => 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2 group"
           >
-            <BookOpen className="h-6 w-6 md:h-7 md:w-7 text-primary group-hover:scale-110 transition-transform" />
+            <div className="p-1.5 sm:p-2 bg-gradient-primary rounded-lg shadow-glow group-hover:scale-110 transition-transform">
+              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+            </div>
             <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
               BookPassing
             </span>
@@ -68,18 +70,18 @@ const LandingNavigation: React.FC<LandingNavigationProps> = ({ onNavigate }) => 
             ))}
           </div>
 
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Desktop Auth Buttons - fixed width container */}
+          <div className="hidden md:flex items-center gap-4 flex-shrink-0" style={{ minWidth: '160px', justifyContent: 'flex-end' }}>
             <Button
               variant="ghost"
               onClick={() => navigate('/auth')}
-              className="text-sm"
+              className="text-sm h-9"
             >
               Sign In
             </Button>
             <Button
               onClick={() => navigate('/auth?mode=signup')}
-              className="text-sm shadow-sm hover:shadow-md transition-all"
+              className="text-sm h-9 shadow-sm hover:shadow-md transition-all"
             >
               Join Now
             </Button>

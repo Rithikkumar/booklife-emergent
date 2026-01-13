@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { clearSensitiveCaches } from '@/utils/securityCache';
-import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -15,50 +15,50 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
   redirectTo = '/auth'
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Use global auth state from AuthContext - no local state duplication
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Listen for sign out events to clear caches
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Handle authentication events
+      (event) => {
         if (event === 'SIGNED_OUT') {
-          // Clear sensitive caches on logout for security
           clearSensitiveCaches();
-          
-          if (requireAuth) {
-            navigate(redirectTo, { 
-              replace: true,
-              state: { from: location.pathname }
-            });
-          }
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
     return () => subscription.unsubscribe();
-  }, [navigate, location.pathname, requireAuth, redirectTo]);
+  }, []);
 
-  // Show loading spinner while checking authentication
-  if (loading) {
+  // Only show loading skeleton on initial app load (not on navigation)
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background">
+        {/* Navigation skeleton */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border h-[60px]">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-muted animate-pulse" />
+              <div className="h-6 w-24 rounded bg-muted animate-pulse" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            </div>
+          </div>
+        </div>
+        {/* Content skeleton */}
+        <div className="pt-[76px] container mx-auto px-4">
+          <div className="h-8 w-48 rounded bg-muted animate-pulse mb-4" />
+          <div className="h-4 w-64 rounded bg-muted animate-pulse mb-8" />
+          <div className="grid gap-4">
+            <div className="h-32 rounded-lg bg-muted animate-pulse" />
+            <div className="h-32 rounded-lg bg-muted animate-pulse" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -74,7 +74,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // If authentication is not required but user is authenticated and on auth page
   if (!requireAuth && user && location.pathname === '/auth') {
-    navigate('/', { replace: true });
+    navigate('/explore', { replace: true });
     return null;
   }
 

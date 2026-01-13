@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, MoreVertical, Eye, EyeOff, Globe, BookOpen, Plus, Grid, List } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, MoreVertical, Globe, BookOpen, Plus, Grid, List, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import Navigation from '@/components/ui/navigation';
+import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { useBookJourney } from '@/hooks/useBookJourney';
+import { BookCover } from '@/utils/bookCovers';
+import { motion } from 'framer-motion';
 
 interface FollowedBook {
   id: string;
   book_title: string;
   book_author: string;
   followed_at: string;
-  notification_enabled: boolean;
 }
 
 const FollowingJourneys: React.FC = () => {
@@ -70,7 +69,6 @@ const FollowingJourneys: React.FC = () => {
 
   const handleBookClick = async (title: string, author: string) => {
     try {
-      // Find matching book in user_books table
       const { data: books, error } = await supabase
         .from('user_books')
         .select('id')
@@ -83,7 +81,6 @@ const FollowingJourneys: React.FC = () => {
       if (books && books.length > 0) {
         navigate(`/book/${books[0].id}`);
       } else {
-        // Fallback: search by title only
         const { data: titleBooks, error: titleError } = await supabase
           .from('user_books')
           .select('id')
@@ -104,36 +101,6 @@ const FollowingJourneys: React.FC = () => {
     }
   };
 
-  const toggleNotifications = async (bookId: string, currentState: boolean, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    try {
-      const { error } = await supabase
-        .from('followed_books')
-        .update({ notification_enabled: !currentState })
-        .eq('id', bookId);
-
-      if (error) throw error;
-
-      setFollowedBooks(prev => 
-        prev.map(book => 
-          book.id === bookId 
-            ? { ...book, notification_enabled: !currentState }
-            : book
-        )
-      );
-
-      toast.success(
-        !currentState 
-          ? 'Journey notifications enabled' 
-          : 'Journey notifications disabled'
-      );
-    } catch (error) {
-      console.error('Error updating notifications:', error);
-      toast.error('Failed to update notifications');
-    }
-  };
-
   const BookJourneyInfo: React.FC<{ title: string; author: string }> = ({ title, author }) => {
     const { journeyPoints, loading: journeyLoading } = useBookJourney(title, author);
     
@@ -141,22 +108,30 @@ const FollowingJourneys: React.FC = () => {
       ? journeyPoints.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
       : null;
 
-    const totalLocations = new Set(journeyPoints.map(p => `${p.city}, ${p.country}`)).size;
+    const uniqueCountries = new Set(journeyPoints.map(p => p.country)).size;
+    const uniqueOwners = new Set(journeyPoints.map(p => p.owner.username)).size;
     
     return (
-      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-        <span className="flex items-center">
-          <Globe className="h-4 w-4 mr-1" />
-          {totalLocations} locations
-        </span>
-        <span className="flex items-center">
-          <BookOpen className="h-4 w-4 mr-1" />
-          {journeyPoints.length} journeys
-        </span>
-        {recentActivity && (
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span className="flex items-center">
-            📍 {recentActivity.city}
+            <Globe className="h-4 w-4 mr-1" />
+            {uniqueCountries} {uniqueCountries === 1 ? 'country' : 'countries'}
           </span>
+          <span className="flex items-center">
+            <Users className="h-4 w-4 mr-1" />
+            {uniqueOwners} {uniqueOwners === 1 ? 'owner' : 'owners'}
+          </span>
+          <span className="flex items-center">
+            <BookOpen className="h-4 w-4 mr-1" />
+            {journeyPoints.length} {journeyPoints.length === 1 ? 'journey' : 'journeys'}
+          </span>
+        </div>
+        {recentActivity && (
+          <div className="text-sm text-muted-foreground">
+            <span>Latest: </span>
+            <span className="text-foreground font-medium">{recentActivity.city}</span>
+          </div>
         )}
       </div>
     );
@@ -164,30 +139,32 @@ const FollowingJourneys: React.FC = () => {
 
   if (loading) {
     return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="pt-32 pb-12">
+      <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey="following-journeys">
+        <div className="pt-8 pb-12">
           <div className="container mx-auto px-4">
             <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-muted rounded w-1/4"></div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="h-8 bg-muted rounded w-1/4 mx-auto"></div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-32 bg-muted rounded"></div>
+                  <div key={i} className="bg-muted rounded-lg p-4">
+                    <div className="h-40 bg-muted-foreground/10 rounded mb-4"></div>
+                    <div className="h-5 bg-muted-foreground/10 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-muted-foreground/10 rounded w-1/2"></div>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScrollRestoreLayout>
     );
   }
 
   return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="pt-24 md:pt-28 pb-12">
+    <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey="following-journeys">
+      <div className="pb-12">
         <div className="container mx-auto px-4">
-          {/* Header - Centered */}
+          {/* Header */}
           <div className="text-center mb-6 sm:mb-8 px-2 sm:px-4">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2 sm:mb-3 lg:mb-4">
               Following Journeys
@@ -197,7 +174,7 @@ const FollowingJourneys: React.FC = () => {
             </p>
           </div>
 
-          {/* View Mode Toggle - Centered below header */}
+          {/* View Mode Toggle */}
           <div className="flex justify-center mb-8">
             <div className="flex bg-muted rounded-md p-1">
               <button
@@ -238,77 +215,132 @@ const FollowingJourneys: React.FC = () => {
                 </Button>
               </div>
             </div>
-          ) : (
-            <div className={viewMode === 'grid' ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3' : 'space-y-4'}>
-              {followedBooks.map((book) => (
-                <Card 
-                  key={book.id} 
-                  className="hover:shadow-lg transition-all cursor-pointer group"
+          ) : viewMode === 'grid' ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {followedBooks.map((book, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  key={book.id}
+                  className="bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 cursor-pointer group"
                   onClick={() => handleBookClick(book.book_title, book.book_author)}
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-2">
-                          {book.book_title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm truncate">
-                          by {book.book_author}
-                        </p>
-                      </div>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {/* Book Cover with Dropdown */}
+                  <div className="relative mb-4">
+                    <div className="w-full h-40 rounded-md overflow-hidden flex items-center justify-center bg-muted">
+                      <BookCover 
+                        title={book.book_title}
+                        author={book.book_author}
+                        size="M"
+                      />
+                    </div>
+                    
+                    {/* Dropdown Menu - outside overflow container */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 bg-background/80 hover:bg-background shadow-sm"
+                          >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            onClick={(e) => toggleNotifications(book.id, book.notification_enabled, e)}
-                          >
-                            {book.notification_enabled ? (
-                              <>
-                                <EyeOff className="mr-2 h-4 w-4" />
-                                Disable Notifications
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Enable Notifications
-                              </>
-                            )}
-                          </DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="bg-popover border shadow-lg z-50" collisionPadding={8}>
                           <DropdownMenuItem 
                             onClick={(e) => handleUnfollowBook(book.id, e)}
-                            className="text-destructive"
+                            className="text-destructive focus:text-destructive"
                           >
                             Unfollow Journey
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  </CardHeader>
+                  </div>
                   
-                  <CardContent className="pt-0">
-                    <BookJourneyInfo title={book.book_title} author={book.book_author} />
-                    
-                    <div className="flex justify-between items-center mt-4">
-                      <Badge variant={book.notification_enabled ? "default" : "secondary"} className="text-xs">
-                        {book.notification_enabled ? 'Notifications On' : 'Notifications Off'}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        Following since {new Date(book.followed_at).toLocaleDateString()}
-                      </span>
+                  {/* Book Info */}
+                  <h3 className="font-serif font-medium text-lg text-foreground mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+                    {book.book_title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-3">by {book.book_author}</p>
+                  
+                  {/* Journey Stats */}
+                  <BookJourneyInfo title={book.book_title} author={book.book_author} />
+                  
+                  {/* Following Since */}
+                  <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                    Following since {new Date(book.followed_at).toLocaleDateString()}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {followedBooks.map((book, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  key={book.id}
+                  className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4 sm:p-6 cursor-pointer group"
+                  onClick={() => handleBookClick(book.book_title, book.book_author)}
+                >
+                  <div className="flex gap-4">
+                    {/* Book Cover */}
+                    <div className="relative w-16 h-24 rounded-md flex-shrink-0 overflow-hidden bg-muted flex items-center justify-center">
+                      <BookCover 
+                        title={book.book_title}
+                        author={book.book_author}
+                        size="S"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    {/* Book Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-serif font-medium text-lg text-foreground mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+                            {book.book_title}
+                          </h3>
+                          <p className="text-muted-foreground text-sm mb-3">by {book.book_author}</p>
+                        </div>
+                        
+                        {/* Dropdown Menu */}
+                        <DropdownMenu modal={false}>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-popover border shadow-lg z-50" collisionPadding={8}>
+                            <DropdownMenuItem 
+                              onClick={(e) => handleUnfollowBook(book.id, e)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              Unfollow Journey
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      
+                      {/* Journey Stats */}
+                      <BookJourneyInfo title={book.book_title} author={book.book_author} />
+                      
+                      {/* Following Since */}
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Following since {new Date(book.followed_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </ScrollRestoreLayout>
   );
 };
 

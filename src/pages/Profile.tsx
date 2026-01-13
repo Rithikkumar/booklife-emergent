@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import BookJourneyCard from '@/components/BookJourneyCard';
 import EditProfileModal from '@/components/EditProfileModal';
 import FollowersFollowingModal from '@/components/profile/FollowersFollowingModal';
-import Navigation from '@/components/ui/navigation';
+import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { BookCover } from '@/utils/bookCovers';
@@ -416,24 +416,22 @@ const ProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="pt-32 pb-12">
+      <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`profile-${username}`}>
+        <div className="pt-8 pb-12">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           </div>
         </div>
-      </div>
+      </ScrollRestoreLayout>
     );
   }
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="pt-32 pb-12">
+      <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`profile-${username}`}>
+        <div className="pt-8 pb-12">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -444,16 +442,15 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </ScrollRestoreLayout>
     );
   }
   
   console.log('Rendering new profile design for:', profile?.display_name);
   
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="pt-32 pb-12">
+    <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`profile-${username}`}>
+      <div className="pb-12">
         <div className="container mx-auto px-4 max-w-6xl">
           {/* Profile Header */}
           <motion.div
@@ -801,7 +798,7 @@ const ProfilePage: React.FC = () => {
           />
         </div>
       </div>
-    </div>
+    </ScrollRestoreLayout>
   );
 };
 

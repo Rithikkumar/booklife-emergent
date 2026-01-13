@@ -251,6 +251,40 @@
   }
 }
 
+/* ============================================
+   LAYOUT STABILITY UTILITIES
+   ============================================ */
+
+/* Prevent layout thrashing with contain */
+.layout-stable {
+  contain: layout style;
+}
+
+/* GPU-accelerated transitions for smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Stable size containers that never change dimensions */
+.size-stable {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+/* Smooth auth state transitions */
+.auth-transition {
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Fixed navigation container to prevent reflow */
+.nav-stable {
+  contain: layout;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
 /* Print Styles for Book Sticker */
 .print-only {
   display: none;
@@ -489,6 +523,261 @@
     color: #8b7355;
     text-align: center;
     margin-top: 5px;
+    letter-spacing: 0.3px;
+  }
+}
+
+/* ============================================
+   BULK STICKER PRINTING STYLES
+   ============================================ */
+
+/* Bulk print page container - 8 stickers per A4 page */
+.print-bulk-page {
+  display: none;
+}
+
+@media print {
+  body.print-bulk-mode .print\\:hidden,
+  body.print-bulk-mode nav,
+  body.print-bulk-mode header {
+    display: none !important;
+  }
+  
+  body.print-bulk-mode .print\\:block {
+    display: block !important;
+  }
+  
+  /* Default A4 format - 2x4 grid = 8 stickers */
+  .print-bulk-page {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 0;
+    width: 210mm;
+    height: 297mm;
+    padding: 10mm;
+    page-break-after: always;
+    box-sizing: border-box;
+  }
+  
+  /* US Letter format - 2x3 grid = 6 stickers */
+  .print-bulk-page-letter {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 216mm;
+    height: 279mm;
+    padding: 12mm;
+  }
+  
+  /* 4x6 Photo format - 1x2 grid = 2 stickers */
+  .print-bulk-page-4x6 {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, 1fr);
+    width: 102mm;
+    height: 152mm;
+    padding: 5mm;
+  }
+  
+  .print-bulk-page:last-child {
+    page-break-after: auto;
+  }
+  
+  /* Individual sticker format for label printers */
+  .print-individual-sticker {
+    width: 51mm;
+    height: 64mm;
+    page-break-after: always;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 2mm;
+    box-sizing: border-box;
+  }
+  
+  .print-individual-sticker:last-child {
+    page-break-after: auto;
+  }
+  
+  .print-individual-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3mm;
+    background: linear-gradient(135deg, #f5ede4 0%, #ebe3d6 100%);
+    border-radius: 3mm;
+    border: 2px solid #c9a96e;
+    box-sizing: border-box;
+  }
+  
+  .print-individual-header {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #5a4a3a;
+    text-align: center;
+  }
+  
+  .print-individual-book {
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .print-individual-title {
+    font-size: 7pt;
+    font-weight: bold;
+    color: #3d2e1f;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .print-individual-author {
+    font-size: 5pt;
+    color: #6b5a48;
+    margin: 0;
+  }
+  
+  .print-individual-qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .print-individual-qr img {
+    width: 18mm;
+    height: 18mm;
+    border: 1px solid #c9a96e;
+    border-radius: 2mm;
+    background: white;
+    padding: 1mm;
+  }
+  
+  .print-individual-code {
+    font-family: 'Courier New', monospace;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #f5ede4;
+    background: #5a4a3a;
+    padding: 1mm 2mm;
+    border-radius: 1.5mm;
+    letter-spacing: 0.5px;
+  }
+  
+  .print-individual-footer {
+    font-size: 5pt;
+    color: #8b7355;
+    text-align: center;
+  }
+  
+  .print-bulk-sticker {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #ccc;
+    box-sizing: border-box;
+    padding: 2mm;
+  }
+  
+  .print-bulk-sticker-empty {
+    border: 1px dashed transparent;
+  }
+  
+  .print-bulk-sticker-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3mm;
+    background: linear-gradient(135deg, #f5ede4 0%, #ebe3d6 100%);
+    border-radius: 4mm;
+    border: 2px solid #c9a96e;
+    box-sizing: border-box;
+  }
+  
+  .print-bulk-header {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .print-bulk-logo {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #5a4a3a;
+    letter-spacing: 0.5px;
+  }
+  
+  .print-bulk-book-info {
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+  }
+  
+  .print-bulk-title {
+    font-size: 8pt;
+    font-weight: bold;
+    color: #3d2e1f;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  
+  .print-bulk-author {
+    font-size: 6pt;
+    color: #6b5a48;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  
+  .print-bulk-qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .print-bulk-qr img {
+    width: 20mm;
+    height: 20mm;
+    border: 1px solid #c9a96e;
+    border-radius: 2mm;
+    background: white;
+    padding: 1mm;
+  }
+  
+  .print-bulk-code {
+    background: #5a4a3a;
+    padding: 1mm 3mm;
+    border-radius: 2mm;
+  }
+  
+  .print-bulk-code span {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    font-weight: bold;
+    color: #f5ede4;
+    letter-spacing: 1px;
+  }
+  
+  .print-bulk-footer {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .print-bulk-footer span {
+    font-size: 5pt;
+    color: #8b7355;
     letter-spacing: 0.3px;
   }
 }

@@ -83,6 +83,42 @@ export type Database = {
         }
         Relationships: []
       }
+      book_codes: {
+        Row: {
+          author: string
+          claimed_at: string | null
+          claimed_by: string | null
+          code: string
+          cover_url: string | null
+          created_at: string
+          created_by: string
+          id: string
+          title: string
+        }
+        Insert: {
+          author: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code: string
+          cover_url?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          title: string
+        }
+        Update: {
+          author?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code?: string
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       book_story_comments: {
         Row: {
           book_id: string
@@ -874,6 +910,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -887,8 +956,10 @@ export type Database = {
           location_sharing_level: string | null
           notify_on_book_class: boolean | null
           notify_on_follow: boolean | null
+          notify_on_message: boolean | null
           profile_picture_url: string | null
           profile_visibility: string | null
+          push_notification_token: string | null
           push_notifications: boolean | null
           role: string | null
           show_location: boolean | null
@@ -908,8 +979,10 @@ export type Database = {
           location_sharing_level?: string | null
           notify_on_book_class?: boolean | null
           notify_on_follow?: boolean | null
+          notify_on_message?: boolean | null
           profile_picture_url?: string | null
           profile_visibility?: string | null
+          push_notification_token?: string | null
           push_notifications?: boolean | null
           role?: string | null
           show_location?: boolean | null
@@ -929,8 +1002,10 @@ export type Database = {
           location_sharing_level?: string | null
           notify_on_book_class?: boolean | null
           notify_on_follow?: boolean | null
+          notify_on_message?: boolean | null
           profile_picture_url?: string | null
           profile_visibility?: string | null
+          push_notification_token?: string | null
           push_notifications?: boolean | null
           role?: string | null
           show_location?: boolean | null

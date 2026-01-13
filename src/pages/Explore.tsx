@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, TrendingUp, Globe, BookOpen, Heart, MessageCircle, Share, Loader2, ChevronDown, Filter, Check } from "lucide-react";
+import { Search, TrendingUp, Globe, BookOpen, Heart, MessageCircle, Share, Loader2, ChevronDown, Filter, Check, Minus, MoreVertical } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useBookFiltering, FilterType } from "@/hooks/useBookFiltering";
 import { useRecentStories } from "@/hooks/useRecentStories";
@@ -38,7 +38,8 @@ const Explore = () => {
   const { stories: recentStories, loading: storiesLoading } = useRecentStories();
   const location = useLocation();
 
-  const scrollKey = `explore:${[...activeFilters].sort().join(',')}|q:${searchQuery || ''}`;
+  // Use stable scroll key - don't change based on filters/search
+  const scrollKey = 'explore';
 
   const mainFilterOptions = [
     { key: 'trending' as FilterType, label: 'Trending', icon: TrendingUp },
@@ -97,7 +98,7 @@ const Explore = () => {
   };
 
   return (
-    <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={scrollKey} ready={!loading}>
+    <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={scrollKey}>
       
       <div className="pb-12">
         <div className="container mx-auto px-1 sm:px-3 lg:px-4 max-w-7xl w-full space-y-6">
@@ -302,27 +303,57 @@ const Explore = () => {
                                      )}
                                    </div>
                                 </div>
-                                <Button 
-                                  variant={isBookFollowed(book.title, book.author) ? "outline" : "default"} 
-                                  size="sm" 
-                                  className={`w-full sm:w-auto flex-shrink-0 ${isBookFollowed(book.title, book.author) ? 'border-2 border-primary text-primary bg-primary/15 hover:bg-primary/25 font-bold shadow-sm' : ''}`}
-                                  disabled={isBookFollowed(book.title, book.author)}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    if (!isBookFollowed(book.title, book.author)) {
-                                      toggleFollow(book.title, book.author);
-                                    }
-                                  }}
-                                >
-                                  {isBookFollowed(book.title, book.author) ? (
-                                    <>
-                                      <Check className="h-4 w-4 font-bold" />
+                                {isBookFollowed(book.title, book.author) ? (
+                                  <div className="flex items-center gap-1 w-full sm:w-auto">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="flex-1 sm:flex-initial border-2 border-primary text-primary bg-primary/15 font-bold shadow-sm cursor-default pointer-events-none"
+                                    >
+                                      <Check className="h-4 w-4" />
                                       Following
-                                    </>
-                                  ) : (
-                                    'Follow Journey'
-                                  )}
-                                </Button>
+                                    </Button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                          onClick={(e) => e.preventDefault()}
+                                        >
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent 
+                                        align="end" 
+                                        className="bg-primary/10 border border-primary/30 shadow-lg z-[100]"
+                                      >
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            toggleFollow(book.title, book.author);
+                                          }}
+                                          className="cursor-pointer text-primary hover:bg-primary/20 hover:text-primary focus:bg-primary/20 focus:text-primary"
+                                        >
+                                          <Minus className="h-4 w-4 mr-2" />
+                                          Unfollow
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                ) : (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm" 
+                                    className="w-full sm:w-auto flex-shrink-0"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      toggleFollow(book.title, book.author);
+                                    }}
+                                  >
+                                    Follow Journey
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>

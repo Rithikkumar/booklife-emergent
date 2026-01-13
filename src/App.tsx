@@ -3,12 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "./contexts/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard";
 import { useNativeFeatures } from "./hooks/useNativeFeatures";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useEffect } from "react";
 import { cleanupExpiredCaches } from "./utils/securityCache";
-
 import Landing from "./pages/Landing";
 import RegisterBook from "./pages/RegisterBook";
 import Explore from "./pages/Explore";
@@ -26,9 +27,11 @@ import Security from "./pages/Security";
 import AdminSecurity from "./pages/AdminSecurity";
 import Help from "./pages/Help";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Messages from "./pages/Messages";
 import MessageThread from "./pages/MessageThread";
 import ScanBook from "./pages/ScanBook";
+import PrintStickers from "./pages/PrintStickers";
 
 
 
@@ -57,11 +60,13 @@ const App = () => {
   }, [isNative, isSupported]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
         <Routes>
           {/* Landing page - no auth required */}
           <Route path="/" element={<Landing />} />
@@ -71,6 +76,7 @@ const App = () => {
               <Auth />
             </AuthGuard>
           } />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           
           {/* Scan route - handles QR code scans, manages its own auth redirect */}
           <Route path="/scan/:code" element={<ScanBook />} />
@@ -131,6 +137,11 @@ const App = () => {
               <FollowingJourneys />
             </AuthGuard>
           } />
+          <Route path="/print-stickers" element={
+            <AuthGuard>
+              <PrintStickers />
+            </AuthGuard>
+          } />
           <Route path="/settings" element={
             <AuthGuard>
               <Settings />
@@ -165,9 +176,11 @@ const App = () => {
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

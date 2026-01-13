@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Navigation from '@/components/ui/navigation';
+import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { ChatRoomList, ChatContainer, NewChatDialog, CreateGroupDialog } from '@/components/chat';
 import EmptyConversationState from '@/components/messages/EmptyConversationState';
 import { Button } from '@/components/ui/button';
@@ -30,9 +30,8 @@ const Messages: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="pt-20 pb-4 lg:pb-8">
+    <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey="messages">
+      <div className="pb-4 lg:pb-8">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Desktop: Split View */}
           <div className="hidden lg:grid lg:grid-cols-12 gap-6 h-[calc(100vh-120px)]">
@@ -135,7 +134,7 @@ const Messages: React.FC = () => {
         onOpenChange={setShowNewGroup}
         onGroupCreated={handleGroupCreated}
       />
-    </div>
+    </ScrollRestoreLayout>
   );
 };
 

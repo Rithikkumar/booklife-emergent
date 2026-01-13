@@ -8,40 +8,51 @@ type Options = {
 
 export const useScrollRestoration = (options: Options = {}) => {
   const location = useLocation();
-  const { key, ready = true } = options;
+  const { key } = options;
   const storageKey = `scroll:${key ?? location.pathname}`;
-  const restoredRef = useRef(false);
+  const hasRestoredRef = useRef(false);
 
-  // Save scroll position on scroll and before unload
+  // Save scroll position on scroll (debounced) and on unmount
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    
     const save = () => {
-      try {
-        sessionStorage.setItem(storageKey, String(window.scrollY));
-      } catch {}
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        try {
+          sessionStorage.setItem(storageKey, String(window.scrollY));
+        } catch {}
+      }, 100); // Debounce saves to avoid excessive writes
     };
 
     window.addEventListener('scroll', save, { passive: true });
-    window.addEventListener('beforeunload', save);
 
     return () => {
-      save();
+      clearTimeout(timeoutId);
+      // Save final position immediately on unmount (before navigating away)
+      try {
+        sessionStorage.setItem(storageKey, String(window.scrollY));
+      } catch {}
       window.removeEventListener('scroll', save);
-      window.removeEventListener('beforeunload', save);
     };
   }, [storageKey]);
 
-  // Restore when content is ready
+  // Restore scroll position immediately on mount
   useEffect(() => {
-    if (!ready || restoredRef.current) return;
+    // Only restore once per mount
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
 
     const saved = sessionStorage.getItem(storageKey);
     const y = saved ? parseInt(saved, 10) : 0;
+    
+    // Small delay to ensure DOM is ready after React renders
+    const timeoutId = setTimeout(() => {
+      window.scrollTo({ top: y, behavior: 'instant' as ScrollBehavior });
+    }, 0);
 
-    requestAnimationFrame(() => {
-      window.scrollTo(0, y);
-      restoredRef.current = true;
-    });
-  }, [ready, storageKey]);
+    return () => clearTimeout(timeoutId);
+  }, [storageKey]);
 
   return {
     saveScrollPosition: () => {

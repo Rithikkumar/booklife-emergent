@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import QRCode from 'qrcode';
 import { BookCover } from "@/utils/bookCovers";
 
-type BookCodeMode = 'not-set' | 'checking' | 'new' | 'existing';
+type BookCodeMode = 'not-set' | 'checking' | 'new' | 'existing' | 'pregenerated';
 
 interface ExistingBookInfo {
   title: string;
@@ -25,6 +25,9 @@ interface ExistingBookInfo {
   currentOwnerId: string;
   genre: string | null;
   tags: string[] | null;
+  isPregenerated?: boolean;
+  pregeneratedCodeId?: string;
+  coverUrl?: string;
 }
 
 const RegisterBook = () => {
@@ -115,7 +118,7 @@ const RegisterBook = () => {
     setBookCodeMode('checking');
 
     try {
-      // Check if the code exists
+      // First check if the code exists in user_books (already in circulation)
       const { data: existingBook, error } = await supabase
         .from('user_books')
         .select('title, author, city, user_id, genre, tags')
@@ -156,8 +159,49 @@ const RegisterBook = () => {
         });
         setBookCodeMode('existing');
       } else {
-        setExistingBookInfo(null);
-        setBookCodeMode('new');
+        // Check if it's a pre-generated code from book_codes table
+        const { data: pregeneratedCode, error: pregeneratedError } = await supabase
+          .from('book_codes')
+          .select('id, title, author, cover_url, claimed_by, created_by')
+          .eq('code', code.toUpperCase())
+          .maybeSingle();
+
+        if (pregeneratedError) {
+          console.error('Error looking up pregenerated code:', pregeneratedError);
+        }
+
+        if (pregeneratedCode && !pregeneratedCode.claimed_by) {
+          // Fetch creator's profile for display
+          let creatorName = 'Unknown';
+          if (pregeneratedCode.created_by) {
+            const { data: creatorProfile } = await supabase
+              .from('profiles')
+              .select('username, display_name')
+              .eq('user_id', pregeneratedCode.created_by)
+              .maybeSingle();
+            
+            if (creatorProfile) {
+              creatorName = creatorProfile.display_name || creatorProfile.username;
+            }
+          }
+
+          setExistingBookInfo({
+            title: pregeneratedCode.title,
+            author: pregeneratedCode.author,
+            city: null,
+            currentOwnerName: creatorName,
+            currentOwnerId: pregeneratedCode.created_by,
+            genre: null,
+            tags: null,
+            isPregenerated: true,
+            pregeneratedCodeId: pregeneratedCode.id,
+            coverUrl: pregeneratedCode.cover_url,
+          });
+          setBookCodeMode('pregenerated');
+        } else {
+          setExistingBookInfo(null);
+          setBookCodeMode('new');
+        }
       }
     } catch (error) {
       console.error('Error looking up book code:', error);
@@ -309,6 +353,47 @@ const RegisterBook = () => {
         toast.success('Book registered! Its journey begins now.');
         resetForm();
 
+      } else if (bookCodeMode === 'pregenerated' && existingBookInfo) {
+        // Claiming a pre-generated code - user is the FIRST owner
+        const bookData = {
+          user_id: user.id,
+          title: existingBookInfo.title,
+          author: existingBookInfo.author,
+          code: bookCode,
+          cover_url: existingBookInfo.coverUrl,
+          neighborhood: acquisitionLocationData?.neighborhood,
+          district: acquisitionLocationData?.district,
+          city: acquisitionLocationData?.city || acquisitionLocation,
+          formatted_address: acquisitionLocationData?.formattedAddress || acquisitionLocation,
+          latitude: acquisitionLocationData?.coordinates?.[0],
+          longitude: acquisitionLocationData?.coordinates?.[1],
+          acquisition_method: acquisitionMethod || 'found',
+          notes: notes || null,
+        };
+
+        // Insert into user_books
+        const { error: insertError } = await supabase
+          .from('user_books')
+          .insert(bookData);
+
+        if (insertError) throw insertError;
+
+        // Mark the code as claimed in book_codes
+        const { error: updateError } = await supabase
+          .from('book_codes')
+          .update({
+            claimed_by: user.id,
+            claimed_at: new Date().toISOString()
+          })
+          .eq('id', existingBookInfo.pregeneratedCodeId);
+
+        if (updateError) {
+          console.error('Error marking code as claimed:', updateError);
+        }
+
+        toast.success(`You're the first owner of "${existingBookInfo.title}"! The journey begins.`);
+        resetForm();
+
       } else if (bookCodeMode === 'existing' && existingBookInfo) {
         // Check if user has EVER owned this book (not just currently)
         const { data: everOwned, error: checkError } = await supabase
@@ -402,6 +487,7 @@ const RegisterBook = () => {
   const getSubmitButtonText = () => {
     if (isRegistering) return "Registering...";
     if (bookCodeMode === 'existing') return "Continue This Book's Journey";
+    if (bookCodeMode === 'pregenerated') return "Claim This Book";
     return "Start This Book's Journey";
   };
 
@@ -474,6 +560,9 @@ const RegisterBook = () => {
                       {bookCodeMode === 'existing' && !isLookingUp && (
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                       )}
+                      {bookCodeMode === 'pregenerated' && !isLookingUp && (
+                        <CheckCircle2 className="h-4 w-4 text-purple-500" />
+                      )}
                       {bookCodeMode === 'new' && !isLookingUp && bookCode.length === 8 && (
                         <Search className="h-4 w-4 text-blue-500" />
                       )}
@@ -528,6 +617,11 @@ const RegisterBook = () => {
                 {bookCodeMode === 'existing' && existingBookInfo && (
                   <p className="text-sm text-green-600 dark:text-green-400">
                     ✓ Book found! You'll be continuing this book's journey.
+                  </p>
+                )}
+                {bookCodeMode === 'pregenerated' && existingBookInfo && (
+                  <p className="text-sm text-purple-600 dark:text-purple-400">
+                    🎉 Found a pre-registered sticker! Be the first owner of this book.
                   </p>
                 )}
               </div>
@@ -611,6 +705,43 @@ const RegisterBook = () => {
                 </div>
               )}
 
+              {/* Pre-generated Sticker Preview */}
+              {bookCodeMode === 'pregenerated' && existingBookInfo && (
+                <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-start gap-4">
+                    <div className="w-16 h-24 rounded shadow-sm overflow-hidden flex-shrink-0">
+                      {existingBookInfo.coverUrl ? (
+                        <img 
+                          src={existingBookInfo.coverUrl} 
+                          alt={existingBookInfo.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <BookCover 
+                          title={existingBookInfo.title}
+                          author={existingBookInfo.author}
+                          size="M"
+                          className="w-full h-full"
+                          fallbackClassName="w-full h-full"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs rounded-full font-medium">
+                          Pre-registered Sticker
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-lg truncate">{existingBookInfo.title}</h3>
+                      <p className="text-muted-foreground text-sm">by {existingBookInfo.author}</p>
+                      <p className="mt-2 text-sm text-purple-600 dark:text-purple-400">
+                        🎉 You found this book! Register to become its first owner.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Book Search for new codes */}
               {bookCodeMode === 'new' && (
                 <div className="space-y-4">
@@ -627,7 +758,7 @@ const RegisterBook = () => {
               )}
 
               {/* Acquisition Details - Always shown when code is valid */}
-              {(bookCodeMode === 'new' || bookCodeMode === 'existing') && (
+              {(bookCodeMode === 'new' || bookCodeMode === 'existing' || bookCodeMode === 'pregenerated') && (
                 <>
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Acquisition Details</h3>

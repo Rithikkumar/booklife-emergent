@@ -68,7 +68,24 @@ export const useMyHostedClasses = () => {
         participant_count: participantCounts[c.id] || 0
       }));
 
-      setClasses(classesWithCounts);
+      // Filter out completed classes
+      const isClassActive = (classItem: HostedClass): boolean => {
+        if (classItem.status === 'live') return true;
+        if (classItem.status === 'ended') return false;
+        if (!classItem.scheduled_date) {
+          // For classes without scheduled date, keep if created within last 24 hours
+          const createdAt = new Date(classItem.created_at);
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          return createdAt > oneDayAgo;
+        }
+        
+        const endTime = new Date(classItem.scheduled_date);
+        endTime.setMinutes(endTime.getMinutes() + (classItem.duration_minutes || 60));
+        return endTime > new Date();
+      };
+
+      const activeClasses = classesWithCounts.filter(isClassActive);
+      setClasses(activeClasses);
       setError(null);
     } catch (err) {
       console.error('Error fetching hosted classes:', err);

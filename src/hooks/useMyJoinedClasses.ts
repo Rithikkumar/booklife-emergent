@@ -110,7 +110,24 @@ export const useMyJoinedClasses = () => {
         };
       });
 
-      setClasses(joinedClasses);
+      // Filter out completed classes
+      const isClassActive = (classItem: JoinedClass): boolean => {
+        if (classItem.status === 'live') return true;
+        if (classItem.status === 'ended') return false;
+        if (!classItem.scheduled_date) {
+          // For classes without scheduled date, keep if created within last 24 hours
+          const createdAt = new Date(classItem.joined_at || Date.now());
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          return createdAt > oneDayAgo;
+        }
+        
+        const endTime = new Date(classItem.scheduled_date);
+        endTime.setMinutes(endTime.getMinutes() + (classItem.duration_minutes || 60));
+        return endTime > new Date();
+      };
+
+      const activeClasses = joinedClasses.filter(isClassActive);
+      setClasses(activeClasses);
       setError(null);
     } catch (err) {
       console.error('Error fetching joined classes:', err);

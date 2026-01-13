@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Save, X } from 'lucide-react';
+import { Save, X, Loader2, Check, AlertCircle } from 'lucide-react';
 import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +28,15 @@ interface ProfileData {
   profile_visibility: 'public' | 'private' | 'followers';
 }
 
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'too_short';
+
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+  const [usernameMessage, setUsernameMessage] = useState('');
   const [profile, setProfile] = useState<ProfileData>({
     username: '',
     display_name: '',
@@ -44,8 +50,6 @@ const EditProfile: React.FC = () => {
     profile_visibility: 'public',
   });
   const [originalUsername, setOriginalUsername] = useState('');
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -55,6 +59,8 @@ const EditProfile: React.FC = () => {
         return;
       }
 
+      setUserId(user.id);
+
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
@@ -63,6 +69,7 @@ const EditProfile: React.FC = () => {
 
       if (error) {
         toast.error('Error loading profile');
+        setInitialLoading(false);
         return;
       }
 
@@ -78,42 +85,94 @@ const EditProfile: React.FC = () => {
         location_sharing_level: (profileData.location_sharing_level as 'none' | 'city' | 'neighborhood' | 'exact') || 'city',
         profile_visibility: (profileData.profile_visibility as 'public' | 'private' | 'followers') || 'public',
       });
-      setOriginalUsername(profileData.username);
+      setOriginalUsername(profileData.username || '');
+      setInitialLoading(false);
     };
 
     fetchProfile();
   }, [navigate]);
 
+  const validateUsername = (username: string): { valid: boolean; message: string; status: UsernameStatus } => {
+    if (username.length < 3) {
+      return { valid: false, message: 'Username must be at least 3 characters', status: 'too_short' };
+    }
+    if (username.length > 20) {
+      return { valid: false, message: 'Username must be 20 characters or less', status: 'invalid' };
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return { valid: false, message: 'Only letters, numbers, and underscores allowed', status: 'invalid' };
+    }
+    return { valid: true, message: '', status: 'idle' };
+  };
+
+  const checkUsernameAvailability = useCallback(async (username: string) => {
+    if (username === originalUsername) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    const validation = validateUsername(username);
+    if (!validation.valid) {
+      setUsernameStatus(validation.status);
+      setUsernameMessage(validation.message);
+      return;
+    }
+
+    setUsernameStatus('checking');
+    setUsernameMessage('Checking availability...');
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('username', username.toLowerCase())
+        .neq('user_id', userId || '')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setUsernameStatus('taken');
+        setUsernameMessage('This username is already taken');
+      } else {
+        setUsernameStatus('available');
+        setUsernameMessage('Username is available');
+      }
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+    }
+  }, [originalUsername, userId]);
+
+  // Debounced username check
+  useEffect(() => {
+    if (!profile.username || profile.username === originalUsername) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkUsernameAvailability(profile.username);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [profile.username, checkUsernameAvailability, originalUsername]);
+
   const handleInputChange = (field: keyof ProfileData, value: string | boolean) => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateUsername = (username: string) => {
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    return usernameRegex.test(username);
-  };
-
-  const checkUsernameAvailability = async (username: string) => {
-    if (username === originalUsername) return true;
-    
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', username)
-      .single();
-
-    return !data;
-  };
-
   const handleSave = async () => {
-    if (!validateUsername(profile.username)) {
-      toast.error('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+    if (usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'too_short') {
+      toast.error(usernameMessage || 'Please fix username issues before saving');
       return;
     }
 
-    const isUsernameAvailable = await checkUsernameAvailability(profile.username);
-    if (!isUsernameAvailable) {
-      toast.error('Username is already taken');
+    if (usernameStatus === 'checking') {
+      toast.error('Please wait for username check to complete');
       return;
     }
 
@@ -126,7 +185,7 @@ const EditProfile: React.FC = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          username: profile.username,
+          username: profile.username.toLowerCase(),
           display_name: profile.display_name,
           bio: profile.bio,
           location: profile.location,
@@ -136,6 +195,7 @@ const EditProfile: React.FC = () => {
           show_location: profile.show_location,
           location_sharing_level: profile.location_sharing_level,
           profile_visibility: profile.profile_visibility,
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
 
@@ -144,11 +204,64 @@ const EditProfile: React.FC = () => {
       toast.success('Profile updated successfully');
       navigate(`/profile/${profile.username}`);
     } catch (error) {
+      console.error('Error updating profile:', error);
       toast.error('Error updating profile');
     } finally {
       setLoading(false);
     }
   };
+
+  const getUsernameStatusIcon = () => {
+    switch (usernameStatus) {
+      case 'checking':
+        return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
+      case 'available':
+        return <Check className="w-4 h-4 text-green-500" />;
+      case 'taken':
+        return <X className="w-4 h-4 text-destructive" />;
+      case 'invalid':
+      case 'too_short':
+        return <AlertCircle className="w-4 h-4 text-destructive" />;
+      default:
+        return null;
+    }
+  };
+
+  const getUsernameInputClass = () => {
+    switch (usernameStatus) {
+      case 'available':
+        return 'border-green-500 focus-visible:ring-green-500';
+      case 'taken':
+      case 'invalid':
+      case 'too_short':
+        return 'border-destructive focus-visible:ring-destructive';
+      default:
+        return '';
+    }
+  };
+
+  const getUsernameMessageColor = () => {
+    switch (usernameStatus) {
+      case 'available':
+        return 'text-green-500';
+      case 'taken':
+      case 'invalid':
+      case 'too_short':
+        return 'text-destructive';
+      default:
+        return 'text-muted-foreground';
+    }
+  };
+
+  if (initialLoading) {
+    return (
+      <ScrollRestoreLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ScrollRestoreLayout>
+    );
+  }
 
   return (
     <ScrollRestoreLayout>
@@ -174,7 +287,7 @@ const EditProfile: React.FC = () => {
               <Avatar className="h-20 w-20">
                 <AvatarImage src={profile.profile_picture_url} alt="Profile" />
                 <AvatarFallback>
-                  {profile.display_name?.charAt(0) || profile.username.charAt(0)}
+                  {profile.display_name?.charAt(0) || profile.username.charAt(0) || '?'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -182,12 +295,14 @@ const EditProfile: React.FC = () => {
                   label="Profile Picture"
                   value={profile.profile_picture_url}
                   onChange={(file, url) => {
-                    setProfileImageFile(file);
                     handleInputChange('profile_picture_url', url);
                   }}
                   variant="profile"
                   maxSize={2}
                   preview={false}
+                  userId={userId || undefined}
+                  imageType="avatar"
+                  uploadToStorage={true}
                 />
               </div>
             </div>
@@ -197,25 +312,41 @@ const EditProfile: React.FC = () => {
               label="Cover Photo"
               value={profile.cover_photo_url}
               onChange={(file, url) => {
-                setCoverImageFile(file);
                 handleInputChange('cover_photo_url', url);
               }}
               variant="cover"
               maxSize={5}
+              userId={userId || undefined}
+              imageType="cover"
+              uploadToStorage={true}
             />
 
-            {/* Username */}
-            <div>
+            {/* Username with Instagram-style feedback */}
+            <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={profile.username}
-                onChange={(e) => handleInputChange('username', e.target.value)}
-                placeholder="your_username"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                3-20 characters, letters, numbers, and underscores only
-              </p>
+              <div className="relative">
+                <Input
+                  id="username"
+                  value={profile.username}
+                  onChange={(e) => handleInputChange('username', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  placeholder="your_username"
+                  className={`pr-10 ${getUsernameInputClass()}`}
+                  maxLength={20}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {getUsernameStatusIcon()}
+                </div>
+              </div>
+              {usernameMessage && (
+                <p className={`text-sm ${getUsernameMessageColor()}`}>
+                  {usernameMessage}
+                </p>
+              )}
+              {!usernameMessage && (
+                <p className="text-sm text-muted-foreground">
+                  3-20 characters, letters, numbers, and underscores only
+                </p>
+              )}
             </div>
 
             {/* Display Name */}
@@ -226,6 +357,7 @@ const EditProfile: React.FC = () => {
                 value={profile.display_name}
                 onChange={(e) => handleInputChange('display_name', e.target.value)}
                 placeholder="Your Display Name"
+                maxLength={50}
               />
             </div>
 
@@ -238,7 +370,11 @@ const EditProfile: React.FC = () => {
                 onChange={(e) => handleInputChange('bio', e.target.value)}
                 placeholder="Tell us about yourself..."
                 rows={4}
+                maxLength={160}
               />
+              <p className="text-xs text-muted-foreground text-right mt-1">
+                {profile.bio.length}/160
+              </p>
             </div>
 
             {/* Location */}
@@ -330,11 +466,11 @@ const EditProfile: React.FC = () => {
             {/* Save Button */}
             <Button
               onClick={handleSave}
-              disabled={loading}
+              disabled={loading || usernameStatus === 'taken' || usernameStatus === 'checking'}
               className="w-full"
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}

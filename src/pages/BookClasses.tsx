@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,7 @@ import { useAllBookClasses } from "@/hooks/useAllBookClasses";
 import { ClassFilterType } from "@/hooks/useBookClassesSearch";
 import { useMyHostedClasses } from "@/hooks/useMyHostedClasses";
 import { useMyJoinedClasses } from "@/hooks/useMyJoinedClasses";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -44,9 +44,9 @@ import {
 const BookClasses = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<ClassSection>('all');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Use centralized auth context for stable auth state
+  const { isAuthenticated, isLoading: isCheckingAuth, userId: currentUserId } = useAuth();
   
   const { liveClasses, loading: liveLoading, joinClass } = useLiveClasses();
   const { stats, loading: statsLoading } = useUserClassStats();
@@ -78,25 +78,6 @@ const BookClasses = () => {
     setActiveFilters([]);
     handleSearch('');
   };
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Use getSession for faster cached check
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session?.user);
-      setCurrentUserId(session?.user?.id || null);
-      setIsCheckingAuth(false);
-    };
-    checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsAuthenticated(!!session?.user);
-      setCurrentUserId(session?.user?.id || null);
-      setIsCheckingAuth(false);
-    });
-    
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleJoinClass = async (classId: string, joinUrl?: string, isLive?: boolean) => {
     const success = await joinClass(classId);
@@ -393,16 +374,24 @@ const BookClasses = () => {
           <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <h3 className="text-lg font-semibold mb-2">
             {activeSection === 'hosted' 
-              ? 'No classes hosted yet'
+              ? stats.hostedClasses > 0 
+                ? 'No active classes' 
+                : 'No classes hosted yet'
               : activeSection === 'joined'
-              ? 'No classes joined yet'
+              ? stats.classesJoined > 0
+                ? 'No active classes'
+                : 'No classes joined yet'
               : 'No classes found'}
           </h3>
           <p className="text-muted-foreground mb-4">
             {activeSection === 'hosted' 
-              ? 'Start hosting classes to share your knowledge!'
+              ? stats.hostedClasses > 0
+                ? 'All your previous classes have ended. Host a new class to continue sharing your knowledge!'
+                : 'Start hosting classes to share your knowledge!'
               : activeSection === 'joined'
-              ? 'Browse available classes and register to get started'
+              ? stats.classesJoined > 0
+                ? 'All your previously joined classes have ended. Browse available classes to find new ones!'
+                : 'Browse available classes and register to get started'
               : searchQuery || activeFilters.length > 0 
                 ? 'Try adjusting your search or filters'
                 : 'No classes are currently available'}
@@ -411,7 +400,7 @@ const BookClasses = () => {
             <HostClassDialog>
               <Button className="bg-gradient-primary hover:shadow-glow">
                 <Video className="h-4 w-4 mr-2" />
-                Host Your First Class
+                {stats.hostedClasses > 0 ? 'Host Another Class' : 'Host Your First Class'}
               </Button>
             </HostClassDialog>
           )}
@@ -463,7 +452,7 @@ const BookClasses = () => {
   );
 
   return (
-    <ScrollRestoreLayout scrollKey={`book-classes:${activeSection}`}>
+    <ScrollRestoreLayout scrollKey="book-classes">
       {/* Mobile Section Tabs */}
       <MobileSectionTabs
         tabs={[

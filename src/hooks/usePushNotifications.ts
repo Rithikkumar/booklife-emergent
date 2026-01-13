@@ -72,10 +72,16 @@ export const usePushNotifications = () => {
         // Save token to database
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await supabase
+          const { error } = await supabase
             .from('profiles')
-            .update({ push_notification_token: token.value } as any)
+            .update({ push_notification_token: token.value })
             .eq('user_id', user.id);
+          
+          if (error) {
+            console.error('Error saving push token:', error);
+          } else {
+            console.log('Push token saved successfully');
+          }
         }
       });
 
@@ -101,7 +107,13 @@ export const usePushNotifications = () => {
           // Handle notification tap - navigate to relevant screen
           const data = notification.notification.data;
           if (data.url) {
-            window.location.href = data.url;
+            // Security: Only allow internal URLs to prevent open redirect attacks
+            const url = String(data.url);
+            if (url.startsWith('/') || url.startsWith(window.location.origin)) {
+              window.location.href = url;
+            } else {
+              console.warn('Blocked potentially malicious redirect URL:', url);
+            }
           }
         }
       );

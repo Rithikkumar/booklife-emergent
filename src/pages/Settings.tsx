@@ -5,18 +5,19 @@ import ScrollRestoreLayout from '@/components/common/ScrollRestoreLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChangePasswordDialog } from '@/components/settings/ChangePasswordDialog';
+import { useTheme } from 'next-themes';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState('system');
+  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   
   // Settings state
@@ -27,6 +28,7 @@ const Settings = () => {
     pushNotifications: false,
     follows: true,
     bookClasses: true,
+    messages: true,
   });
 
   useEffect(() => {
@@ -42,23 +44,23 @@ const Settings = () => {
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (profile) {
-        setProfile(profile);
-        setSettings(prev => ({
-          ...prev,
-          isPrivate: profile.is_private || false,
-          showLocation: profile.show_location || false,
-          emailNotifications: profile.email_notifications ?? true,
-          pushNotifications: profile.push_notifications ?? false,
-          follows: profile.notify_on_follow ?? true,
-          bookClasses: profile.notify_on_book_class ?? true,
-        }));
+      if (profileData) {
+        setProfile(profileData);
+        setSettings({
+          isPrivate: profileData.is_private || false,
+          showLocation: profileData.show_location || false,
+          emailNotifications: profileData.email_notifications ?? true,
+          pushNotifications: profileData.push_notifications ?? false,
+          follows: profileData.notify_on_follow ?? true,
+          bookClasses: profileData.notify_on_book_class ?? true,
+          messages: profileData.notify_on_message ?? true,
+        });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -67,20 +69,23 @@ const Settings = () => {
     }
   };
 
-  const updateProfileSetting = async (key: string, value: boolean) => {
+  const updateProfileSetting = async (dbKey: string, stateKey: string, value: boolean) => {
+    setSavingKey(stateKey);
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ [key]: value })
+        .update({ [dbKey]: value, updated_at: new Date().toISOString() })
         .eq('user_id', profile.user_id);
 
       if (error) throw error;
       
-      setSettings(prev => ({ ...prev, [key]: value }));
-      toast.success('Setting updated successfully');
+      setSettings(prev => ({ ...prev, [stateKey]: value }));
+      toast.success('Setting updated');
     } catch (error) {
       toast.error('Failed to update setting');
       console.error('Error updating setting:', error);
+    } finally {
+      setSavingKey(null);
     }
   };
 
@@ -90,7 +95,8 @@ const Settings = () => {
     description, 
     value, 
     onChange, 
-    type = 'switch' 
+    type = 'switch',
+    disabled = false,
   }: {
     icon: any;
     title: string;
@@ -98,6 +104,7 @@ const Settings = () => {
     value: any;
     onChange: (value: any) => void;
     type?: 'switch' | 'select';
+    disabled?: boolean;
   }) => (
     <div className="flex items-center justify-between py-4">
       <div className="flex items-start space-x-3 flex-1">
@@ -108,9 +115,9 @@ const Settings = () => {
         </div>
       </div>
       {type === 'switch' ? (
-        <Switch checked={value} onCheckedChange={onChange} />
+        <Switch checked={value} onCheckedChange={onChange} disabled={disabled} />
       ) : (
-        <Select value={value} onValueChange={onChange}>
+        <Select value={value} onValueChange={onChange} disabled={disabled}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -206,7 +213,8 @@ const Settings = () => {
                   title="Private Account"
                   description="Only followers can see your books"
                   value={settings.isPrivate}
-                  onChange={(value) => updateProfileSetting('is_private', value)}
+                  onChange={(value) => updateProfileSetting('is_private', 'isPrivate', value)}
+                  disabled={savingKey === 'isPrivate'}
                 />
                 <Separator />
                 <SettingItem
@@ -214,7 +222,8 @@ const Settings = () => {
                   title="Show Location"
                   description="Display your location on your profile"
                   value={settings.showLocation}
-                  onChange={(value) => updateProfileSetting('show_location', value)}
+                  onChange={(value) => updateProfileSetting('show_location', 'showLocation', value)}
+                  disabled={savingKey === 'showLocation'}
                 />
               </div>
             </CardContent>
@@ -236,7 +245,7 @@ const Settings = () => {
                 icon={Palette}
                 title="Theme"
                 description="Choose your preferred theme"
-                value={theme}
+                value={theme || 'system'}
                 onChange={setTheme}
                 type="select"
               />
@@ -261,7 +270,8 @@ const Settings = () => {
                   title="Email Notifications"
                   description="Receive notifications via email"
                   value={settings.emailNotifications}
-                  onChange={(value) => updateProfileSetting('email_notifications', value)}
+                  onChange={(value) => updateProfileSetting('email_notifications', 'emailNotifications', value)}
+                  disabled={savingKey === 'emailNotifications'}
                 />
                 <Separator />
                 <SettingItem
@@ -269,7 +279,8 @@ const Settings = () => {
                   title="Push Notifications"
                   description="Receive push notifications on your device"
                   value={settings.pushNotifications}
-                  onChange={(value) => updateProfileSetting('push_notifications', value)}
+                  onChange={(value) => updateProfileSetting('push_notifications', 'pushNotifications', value)}
+                  disabled={savingKey === 'pushNotifications'}
                 />
                 <Separator />
                 <SettingItem
@@ -277,7 +288,8 @@ const Settings = () => {
                   title="New Followers"
                   description="Get notified when someone follows you"
                   value={settings.follows}
-                  onChange={(value) => updateProfileSetting('notify_on_follow', value)}
+                  onChange={(value) => updateProfileSetting('notify_on_follow', 'follows', value)}
+                  disabled={savingKey === 'follows'}
                 />
                 <Separator />
                 <SettingItem
@@ -285,7 +297,17 @@ const Settings = () => {
                   title="Book Classes"
                   description="Get notified about book class updates"
                   value={settings.bookClasses}
-                  onChange={(value) => updateProfileSetting('notify_on_book_class', value)}
+                  onChange={(value) => updateProfileSetting('notify_on_book_class', 'bookClasses', value)}
+                  disabled={savingKey === 'bookClasses'}
+                />
+                <Separator />
+                <SettingItem
+                  icon={Bell}
+                  title="Direct Messages"
+                  description="Get notified when you receive messages"
+                  value={settings.messages}
+                  onChange={(value) => updateProfileSetting('notify_on_message', 'messages', value)}
+                  disabled={savingKey === 'messages'}
                 />
               </div>
             </CardContent>
@@ -326,37 +348,23 @@ const Settings = () => {
                 <span>Support</span>
               </CardTitle>
               <CardDescription>
-                Get help and provide feedback
+                Get help with using the app
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-1">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start h-auto p-4"
-                >
-                  <div className="flex items-center space-x-3">
-                    <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Help Center</p>
-                      <p className="text-xs text-muted-foreground">Get help with using the app</p>
-                    </div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-auto p-4"
+                onClick={() => navigate('/help')}
+              >
+                <div className="flex items-center space-x-3">
+                  <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                  <div className="text-left">
+                    <p className="text-sm font-medium">Help Center</p>
+                    <p className="text-xs text-muted-foreground">Learn how to use the app</p>
                   </div>
-                </Button>
-                <Separator />
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start h-auto p-4"
-                >
-                  <div className="flex items-center space-x-3">
-                    <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Contact Support</p>
-                      <p className="text-xs text-muted-foreground">Get in touch with our support team</p>
-                    </div>
-                  </div>
-                </Button>
-              </div>
+                </div>
+              </Button>
             </CardContent>
           </Card>
         </div>

@@ -267,18 +267,19 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
         </div>
       )}
 
+      {/* Rate Limit Warning */}
+      {isRateLimited && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive text-sm border-t">
+          <AlertTriangle className="h-4 w-4" />
+          <span>Please wait {retryAfter}s before sending another message</span>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t bg-background">
         <div className="flex gap-2 items-end">
           <div className="flex gap-1">
             <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-9 w-9 p-0 hover:bg-accent"
-            >
-              <Paperclip className="h-5 w-5 text-muted-foreground" />
-            </Button>
           </div>
           
           <Textarea
@@ -288,12 +289,16 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
             onKeyPress={handleKeyPress}
             className="min-h-[44px] max-h-32 resize-none flex-1"
             rows={1}
+            maxLength={CHAT_CONFIG.MAX_MESSAGE_LENGTH}
+            disabled={isRateLimited}
+            data-testid="message-input"
           />
           
           <Button
             onClick={handleSendMessage}
-            disabled={!currentMessage.trim()}
+            disabled={!currentMessage.trim() || sending || isRateLimited}
             className="h-11 w-11 p-0 flex-shrink-0"
+            data-testid="send-message-btn"
           >
             <Send className="h-4 w-4" />
           </Button>

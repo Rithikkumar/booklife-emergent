@@ -216,11 +216,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             align={isSent ? 'end' : 'start'}
           >
             <div className="flex gap-1">
-              {QUICK_REACTIONS.map(emoji => (
+              {CHAT_CONFIG.QUICK_REACTIONS.map(emoji => (
                 <button
                   key={emoji}
                   onClick={() => onReact?.(emoji)}
                   className="text-lg hover:scale-125 transition-transform p-1"
+                  data-testid={`reaction-${emoji}`}
                 >
                   {emoji}
                 </button>

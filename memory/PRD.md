@@ -77,13 +77,16 @@ BookPassing is a book-sharing community platform built with React/Vite/TypeScrip
    - Max message length
    - Quick reactions array
 
-8. **Logger Integration**
-   - Replaced console.error with logger.error in chat files
-   - Uses existing `/app/src/utils/logger.ts` utility
+8. **Logger Integration - COMPLETE**
+   - Replaced ALL 183 console.* statements with logger utility
+   - Uses `/app/src/utils/logger.ts` for environment-aware logging
+   - Production: Only warns and errors shown
+   - Development: All log levels shown
 
 9. **Type Safety Improvements**
    - Removed `any` types from MessageThreadContent.tsx
    - Added proper DirectMessage type imports
+   - Added type cast for reactions: `(msg.reactions as Record<string, string[]>)`
 
 10. **data-testid Attributes**
     - Added to ChatContainer (container, header, back-btn, messages-area, etc.)
@@ -91,28 +94,47 @@ BookPassing is a book-sharing community platform built with React/Vite/TypeScrip
     - Added to ChatMessage (reaction buttons)
     - Added to MessageThreadContent (input, send button, retry buttons)
 
-## Pending Tasks
+11. **Nominatim Schema Extension**
+    - Added missing fields to Zod schema: quarter, locality, region, province, name
+    - Proper type safety for global geocoding
 
-### P3 - Console.log Cleanup (Partial)
-- Created logger.ts utility but ~200+ console statements remain
-- Chat system updated, rest of app still needs migration
+#### Database Schema Migration (Applied)
+- Added **28 foreign key constraints** for data integrity
+- Added **25+ performance indexes** for faster queries
+- Key FKs added:
+  - conversations → profiles (participants)
+  - direct_messages → profiles (sender)
+  - chat_messages → profiles (sender)
+  - followers → profiles (both directions)
+  - user_books → profiles
+  - And many more...
 
-### Future/Backlog
-- Implement any additional chat improvements based on user feedback
-- Complete console.log cleanup across entire application
-- Consider shared base hook for DM/Chat code deduplication
+#### UI Fixes
+- Fixed duplicate "Messages" header on Messages page
+- Added `hideHeader` prop to ChatRoomList component
 
-## Database Schema (Inferred)
+## Database Schema (Verified)
 - `user_books` - Book information and ownership
 - `book_journey` - Location/story points for book travel
 - `profiles` - User profile data
-- `direct_messages` - DM messages
-- `conversations` - DM threads between users
+- `direct_messages` - DM messages (FK to profiles.user_id)
+- `conversations` - DM threads between users (FK to profiles.user_id)
 - `chat_rooms` - Group chat rooms
-- `chat_messages` - Group chat messages
-- `chat_room_members` - Room membership
+- `chat_messages` - Group chat messages (FK to profiles.user_id)
+- `chat_room_members` - Room membership (FK to profiles.user_id)
+- `communities` - Community data
+- `community_members` - Community membership
+- `community_messages` - Community chat
 
 ## Environment Configuration
 - All URLs, credentials from `.env` files
 - Frontend: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_APP_DOMAIN`
 - Project runs on port 3000 (Vite dev server)
+
+## Pending Tasks
+None - All identified issues have been resolved.
+
+## Future/Backlog
+- Consider shared base hook for DM/Chat code deduplication (P2 - optional refactor)
+- Message search functionality
+- Additional chat features based on user feedback

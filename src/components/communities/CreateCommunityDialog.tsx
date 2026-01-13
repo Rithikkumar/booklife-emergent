@@ -58,7 +58,7 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({ onCreateC
   const generateShareableLink = () => {
     if (!formData.name) return '';
     const communitySlug = formData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-    return `https://booksharing.app/join/${communitySlug}-${Date.now().toString().slice(-4)}`;
+    return getCommunityJoinUrl(communitySlug);
   };
 
   const copyToClipboard = async () => {

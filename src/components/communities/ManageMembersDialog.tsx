@@ -20,6 +20,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CommunityMember } from '@/hooks/useCommunityChat';
+import { logger } from '@/utils/logger';
 
 interface ManageMembersDialogProps {
   members: CommunityMember[];

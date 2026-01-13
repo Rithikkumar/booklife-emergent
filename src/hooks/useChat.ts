@@ -132,7 +132,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
       const cached = sessionStorage.getItem(`${CACHE_PREFIX}${roomId}`);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_EXPIRY) {
+        if (Date.now() - timestamp < CHAT_CONFIG.CACHE_EXPIRY) {
           return data as ChatMessage[];
         }
         sessionStorage.removeItem(`${CACHE_PREFIX}${roomId}`);
@@ -146,7 +146,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
   const setCachedMessages = useCallback((msgs: ChatMessage[]) => {
     try {
       sessionStorage.setItem(`${CACHE_PREFIX}${roomId}`, JSON.stringify({
-        data: msgs.slice(0, 100), // Only cache last 100 messages
+        data: msgs.slice(0, CHAT_CONFIG.MAX_CACHED_MESSAGES),
         timestamp: Date.now()
       }));
     } catch {

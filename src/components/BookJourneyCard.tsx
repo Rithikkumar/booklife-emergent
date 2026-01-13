@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Users, Clock } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { BookCover } from '@/utils/bookCovers';
 
 interface BookJourneyCardProps {
@@ -8,11 +8,7 @@ interface BookJourneyCardProps {
     id: string;
     title: string;
     author: string;
-    owners: number;
-    countries: number;
-    journeyYears: number;
-    latestCity: string;
-    coverColor?: string;
+    owners: number;  // This is the journey_count - number of times this book has been registered
   };
 }
 
@@ -21,7 +17,7 @@ const BookJourneyCard: React.FC<BookJourneyCardProps> = ({ book }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-lg shadow-card hover:shadow-elegant transition-all duration-300 p-6"
+      className="bg-card rounded-lg shadow-card hover:shadow-elegant transition-all duration-300 p-4"
     >
       <div className="flex gap-4">
         {/* Book Cover */}
@@ -36,30 +32,17 @@ const BookJourneyCard: React.FC<BookJourneyCardProps> = ({ book }) => {
         
         {/* Book Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-serif font-medium text-lg text-foreground mb-1 line-clamp-1">
+          <h3 className="font-serif font-medium text-lg text-foreground mb-1 line-clamp-2">
             {book.title}
           </h3>
-          <p className="text-muted-foreground mb-3">{book.author}</p>
+          <p className="text-muted-foreground text-sm mb-3 line-clamp-1">{book.author}</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin size={14} />
-              <span>{book.countries} countries</span>
+          {book.owners > 1 && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users size={14} className="text-primary" />
+              <span>{book.owners} {book.owners === 1 ? 'owner' : 'owners'} in journey</span>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Users size={14} />
-              <span>{book.owners} owners</span>
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock size={14} />
-              <span>{book.journeyYears} years</span>
-            </div>
-          </div>
-          
-          <div className="mt-3 text-sm text-muted-foreground">
-            <span>Latest: </span>
-            <span className="text-foreground font-medium">{book.latestCity}</span>
-          </div>
+          )}
         </div>
       </div>
     </motion.div>

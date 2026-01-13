@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { Check, CheckCheck, MoreVertical, Reply, Smile, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import type { ChatMessage as ChatMessageType } from '@/hooks/useChat';
+import { CHAT_CONFIG } from '@/constants/chat';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -29,8 +30,6 @@ interface ChatMessageProps {
   onDelete?: () => void;
   onRetry?: () => void;
 }
-
-const QUICK_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏'];
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,

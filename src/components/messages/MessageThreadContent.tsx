@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Paperclip } from 'lucide-react';
-import { useDirectMessages } from '@/hooks/useDirectMessages';
+import { ArrowLeft, Send, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useDirectMessages, DirectMessage } from '@/hooks/useDirectMessages';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
 import TypingIndicator from './TypingIndicator';
+import { CHAT_CONFIG } from '@/constants/chat';
 
 interface MessageThreadContentProps {
   conversationId: string;

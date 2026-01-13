@@ -266,9 +266,9 @@ const RegisterBook = () => {
         setBookCodeMode('new');
         setExistingBookInfo(null);
         
-        // Generate QR code
+        // Generate QR code using configured domain
         try {
-          const bookUrl = `https://bookpassing.com/scan/${newCode}`;
+          const bookUrl = getBookScanUrl(newCode);
           const qrUrl = await QRCode.toDataURL(bookUrl, {
             width: 200,
             margin: 2,
@@ -286,7 +286,6 @@ const RegisterBook = () => {
             timestamp: Date.now()
           }));
         } catch (qrError) {
-          console.error('Error generating QR code:', qrError);
           toast.error('Code generated but QR code failed.');
           return;
         }

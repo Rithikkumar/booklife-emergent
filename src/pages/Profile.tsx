@@ -754,10 +754,6 @@ const ProfilePage: React.FC = () => {
                                title: book.title,
                                author: book.author,
                                owners: book.journey_count,
-                               countries: 1, // TODO: Implement actual data
-                               journeyYears: 0, // TODO: Implement actual data
-                               latestCity: 'Current', // TODO: Implement actual data
-                               coverColor: 'bg-muted'
                              }} 
                            />
                          </div>

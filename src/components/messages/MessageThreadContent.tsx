@@ -23,11 +23,31 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
   showBackButton = false,
   onBack,
 }) => {
-  const { messages, sendMessage, addReaction, deleteMessage, markAsRead, loadMoreMessages, hasMore, isTyping, sendTypingIndicator } = useDirectMessages(conversationId);
+  const { 
+    messages, 
+    sendMessage, 
+    addReaction, 
+    deleteMessage, 
+    retryMessage,
+    markAsRead, 
+    loadMoreMessages, 
+    hasMore, 
+    isTyping, 
+    isRateLimited,
+    retryAfter,
+    sending,
+    sendTypingIndicator,
+    currentUserId: hookUserId
+  } = useDirectMessages(conversationId);
+  
   const [currentMessage, setCurrentMessage] = useState('');
-  const [replyingTo, setReplyingTo] = useState<any>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [otherParticipant, setOtherParticipant] = useState<any>(null);
+  const [replyingTo, setReplyingTo] = useState<DirectMessage | null>(null);
+  const [otherParticipant, setOtherParticipant] = useState<{
+    user_id: string;
+    username: string;
+    display_name: string | null;
+    profile_picture_url: string | null;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

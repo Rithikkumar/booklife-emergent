@@ -139,11 +139,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   }
 
   return (
-    <div className={cn('flex flex-col h-full bg-background', className)}>
+    <div className={cn('flex flex-col h-full bg-background', className)} data-testid="chat-container">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b bg-background/95 backdrop-blur shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b bg-background/95 backdrop-blur shrink-0" data-testid="chat-header">
         {showBackButton && onBack && (
-          <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
+          <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8" data-testid="chat-back-btn">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
@@ -156,14 +156,14 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground truncate">{displayName}</h2>
+          <h2 className="font-semibold text-foreground truncate" data-testid="chat-display-name">{displayName}</h2>
           {showMemberCount && members.length > 0 && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground" data-testid="chat-member-count">
               {members.length} member{members.length !== 1 ? 's' : ''}
             </p>
           )}
           {typingUsers.length > 0 && !showMemberCount && (
-            <p className="text-xs text-muted-foreground animate-pulse">
+            <p className="text-xs text-muted-foreground animate-pulse" data-testid="chat-typing-indicator">
               typing...
             </p>
           )}

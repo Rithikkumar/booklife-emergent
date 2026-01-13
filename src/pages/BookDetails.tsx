@@ -205,12 +205,12 @@ const BookDetails: React.FC = () => {
   return (
     <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`book-${id}`}>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12 max-w-7xl">
+      <div className="pb-12">
         {/* Back button */}
         <button 
           type="button"
           onClick={handleGoBack}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-all duration-200 hover:gap-3 group"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-3 transition-all duration-200 hover:gap-3 group"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           <span className="font-medium">Back</span>

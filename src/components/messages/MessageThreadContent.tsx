@@ -52,18 +52,10 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    fetchCurrentUser();
-  }, []);
-
-  useEffect(() => {
     const fetchOtherParticipant = async () => {
-      if (!currentUserId) return;
+      if (!hookUserId) return;
 
-      // Step 1: Fetch the conversation without foreign key joins
+      // Fetch the conversation without foreign key joins
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
         .select('participant_1_id, participant_2_id')
@@ -71,32 +63,28 @@ const MessageThreadContent: React.FC<MessageThreadContentProps> = ({
         .maybeSingle();
 
       if (convError || !conversation) {
-        console.error('Error fetching conversation:', convError);
         return;
       }
 
-      // Step 2: Determine the other participant's ID
-      const otherUserId = conversation.participant_1_id === currentUserId
+      // Determine the other participant's ID
+      const otherUserId = conversation.participant_1_id === hookUserId
         ? conversation.participant_2_id
         : conversation.participant_1_id;
 
-      // Step 3: Fetch the other participant's profile separately
-      const { data: profileData, error: profileError } = await supabase
+      // Fetch the other participant's profile
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, username, display_name, profile_picture_url')
         .eq('user_id', otherUserId)
         .maybeSingle();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        return;
+      if (profileData) {
+        setOtherParticipant(profileData);
       }
-
-      setOtherParticipant(profileData);
     };
 
     fetchOtherParticipant();
-  }, [conversationId, currentUserId]);
+  }, [conversationId, hookUserId]);
 
   useEffect(() => {
     if (scrollRef.current) {

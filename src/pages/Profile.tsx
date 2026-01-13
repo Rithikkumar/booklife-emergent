@@ -444,8 +444,6 @@ const ProfilePage: React.FC = () => {
     );
   }
   
-  console.log('Rendering new profile design for:', profile?.display_name);
-  
   return (
     <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`profile-${username}`}>
       <div className="pb-12">

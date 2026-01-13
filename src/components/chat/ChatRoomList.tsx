@@ -214,35 +214,54 @@ export const ChatRoomList: React.FC<ChatRoomListProps> = ({
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
-      {/* Header */}
-      <div className="p-4 space-y-3 shrink-0">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Messages</h2>
-          <div className="flex gap-1">
-            {onNewChat && (
-              <Button variant="ghost" size="icon" onClick={onNewChat} title="New chat">
-                <MessageSquarePlus className="h-5 w-5" />
-              </Button>
-            )}
-            {onNewGroup && (
-              <Button variant="ghost" size="icon" onClick={onNewGroup} title="New group">
-                <Plus className="h-5 w-5" />
-              </Button>
-            )}
+      {/* Header - only show if not hidden by parent */}
+      {!hideHeader && (
+        <div className="p-4 space-y-3 shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Messages</h2>
+            <div className="flex gap-1">
+              {onNewChat && (
+                <Button variant="ghost" size="icon" onClick={onNewChat} title="New chat">
+                  <MessageSquarePlus className="h-5 w-5" />
+                </Button>
+              )}
+              {onNewGroup && (
+                <Button variant="ghost" size="icon" onClick={onNewGroup} title="New group">
+                  <Plus className="h-5 w-5" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              data-testid="chat-search-input"
+            />
           </div>
         </div>
+      )}
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+      {/* Search only (when header is hidden) */}
+      {hideHeader && (
+        <div className="px-4 pb-3 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              data-testid="chat-search-input"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Room list */}
       <ScrollArea className="flex-1">

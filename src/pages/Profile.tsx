@@ -412,8 +412,6 @@ const ProfilePage: React.FC = () => {
   const isCurrentUserProfile = currentUser && profile && currentUser.id === profile.user_id;
   const canViewContent = !profile?.is_private || isCurrentUserProfile || isFollowing;
 
-  console.log('Profile page rendering:', { profile: profile?.username, isCurrentUserProfile, currentUser: currentUser?.id });
-
   if (loading) {
     return (
       <ScrollRestoreLayout className="min-h-screen bg-background" scrollKey={`profile-${username}`}>

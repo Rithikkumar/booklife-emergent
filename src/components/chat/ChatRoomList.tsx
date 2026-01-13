@@ -37,6 +37,7 @@ interface ChatRoomListProps {
   onNewChat?: () => void;
   onNewGroup?: () => void;
   className?: string;
+  hideHeader?: boolean; // Hide internal header when parent provides one
 }
 
 export const ChatRoomList: React.FC<ChatRoomListProps> = ({
@@ -44,7 +45,8 @@ export const ChatRoomList: React.FC<ChatRoomListProps> = ({
   onSelectRoom,
   onNewChat,
   onNewGroup,
-  className
+  className,
+  hideHeader = false
 }) => {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);

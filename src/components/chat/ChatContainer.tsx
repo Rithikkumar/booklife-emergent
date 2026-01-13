@@ -175,6 +175,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         ref={scrollRef}
         className="flex-1 overflow-y-auto"
         onScroll={handleScroll}
+        data-testid="chat-messages-area"
       >
         {/* Load more button */}
         {hasMore && (
@@ -185,6 +186,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
               onClick={loadMoreMessages}
               disabled={loading}
               className="text-muted-foreground"
+              data-testid="load-more-messages-btn"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -195,7 +197,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         )}
 
         {/* Messages */}
-        <div className="py-2">
+        <div className="py-2" data-testid="messages-list">
           {messages.map((msg) => (
             <ChatMessage
               key={msg.id}

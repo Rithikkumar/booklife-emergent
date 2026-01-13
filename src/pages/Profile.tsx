@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-import { logger } from '@/utils/logger';
   BookOpen, 
   MapPin, 
   Users, 
@@ -23,6 +22,7 @@ import { logger } from '@/utils/logger';
 } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
 import BookJourneyCard from '@/components/BookJourneyCard';
 import EditProfileModal from '@/components/EditProfileModal';

@@ -1,5 +1,6 @@
 /**
- * Enhanced utility functions for fetching book covers with multiple fallbacks
+ * Utility functions for fetching book covers dynamically from public APIs
+ * No hardcoded data - all covers are fetched from OpenLibrary or Google Books
  */
 
 import React from 'react';
@@ -7,11 +8,13 @@ import {
   validateOpenLibraryResponse, 
   validateGoogleBooksResponse,
   isAllowedImageUrl,
-  type ValidatedOpenLibraryBook 
 } from './apiValidation';
 
-// Cache for successful cover lookups with cache busting capability
+// Cache for successful cover lookups (in-memory, clears on page refresh)
 const coverCache = new Map<string, string>();
+
+// Cache for failed lookups to avoid repeated API calls
+const failedCache = new Set<string>();
 
 // Function to clear cache for a specific book or all books
 export const clearCoverCache = (title?: string, author?: string) => {
@@ -20,32 +23,13 @@ export const clearCoverCache = (title?: string, author?: string) => {
     ['S', 'M', 'L'].forEach(size => {
       const cacheKey = `${title.toLowerCase()}-${author?.toLowerCase() || ''}-${size}`;
       coverCache.delete(cacheKey);
+      failedCache.delete(cacheKey);
     });
   } else {
     // Clear all cache
     coverCache.clear();
+    failedCache.clear();
   }
-};
-
-// Manual mappings for popular books that might have API issues
-// These mappings use verified cover IDs to ensure correct covers are always shown
-// IMPORTANT: Database cover_url is deprecated - always use dynamic fetching
-const MANUAL_COVER_MAPPINGS: Record<string, string> = {
-  'harry potter and the philosopher\'s stone': 'https://covers.openlibrary.org/b/id/10521270-M.jpg',
-  'harry potter and the sorcerer\'s stone': 'https://covers.openlibrary.org/b/id/10521270-M.jpg',
-  'harry potter and the chamber of secrets': 'https://covers.openlibrary.org/b/id/10521271-M.jpg',
-  'harry potter and the prisoner of azkaban': 'https://covers.openlibrary.org/b/id/10521272-M.jpg',
-  'harry potter and the goblet of fire': 'https://covers.openlibrary.org/b/id/10521273-M.jpg',
-  'harry potter and the order of the phoenix': 'https://covers.openlibrary.org/b/id/10521274-M.jpg',
-  'harry potter and the half-blood prince': 'https://covers.openlibrary.org/b/id/10521275-M.jpg',
-  'harry potter and the deathly hallows': 'https://covers.openlibrary.org/b/id/10521276-M.jpg',
-  'the lord of the rings': 'https://covers.openlibrary.org/b/id/8739161-M.jpg',
-  'the hobbit': 'https://covers.openlibrary.org/b/id/6979861-M.jpg',
-  '1984': 'https://covers.openlibrary.org/b/id/7222246-M.jpg',
-  'to kill a mockingbird': 'https://covers.openlibrary.org/b/id/8739163-M.jpg',
-  // Using cover_i from Open Library search API first result (same as Register Book shows)
-  'pride and prejudice': 'https://covers.openlibrary.org/b/id/14348537-M.jpg',
-  'pride and prejudice jane austen': 'https://covers.openlibrary.org/b/id/14348537-M.jpg'
 };
 
 /**
@@ -55,16 +39,16 @@ const getTitleVariations = (title: string): string[] => {
   const variations = [title];
   const lowerTitle = title.toLowerCase();
   
-  // Harry Potter specific variations
+  // Handle UK/US spelling variations for Harry Potter
   if (lowerTitle.includes('philosopher\'s stone')) {
     variations.push(title.replace(/philosopher's stone/i, 'Sorcerer\'s Stone'));
   } else if (lowerTitle.includes('sorcerer\'s stone')) {
     variations.push(title.replace(/sorcerer's stone/i, 'Philosopher\'s Stone'));
   }
   
-  // Remove common prefixes/suffixes
+  // Remove common prefixes/suffixes that might affect search
   const cleanTitle = title.replace(/^(the|a|an)\s+/i, '').replace(/\s+(the|a|an)$/i, '');
-  if (cleanTitle !== title) {
+  if (cleanTitle !== title && cleanTitle.length > 2) {
     variations.push(cleanTitle);
   }
   
@@ -79,7 +63,7 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
   
   for (const titleVariation of titleVariations) {
     try {
-      // Try exact title + author search with author verification
+      // Try exact title + author search
       const searchQuery = `title:${encodeURIComponent(titleVariation)}${author ? `+author:${encodeURIComponent(author)}` : ''}`;
       const searchUrl = `https://openlibrary.org/search.json?q=${searchQuery}&fields=key,title,author_name,cover_i,isbn&limit=5`;
       
@@ -87,7 +71,6 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
       if (!response.ok) continue;
       
       const rawData = await response.json();
-      // Validate API response
       const data = validateOpenLibraryResponse(rawData);
       
       if (data.docs && data.docs.length > 0) {
@@ -98,22 +81,19 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
               bookAuthor.toLowerCase().includes(author.toLowerCase()) ||
               author.toLowerCase().includes(bookAuthor.toLowerCase())
             );
-            if (!authorMatch) {
-              continue;
-            }
+            if (!authorMatch) continue;
           }
           
           // Verify title matches (case-insensitive, allowing partial matches)
-          const titleMatch = book.title.toLowerCase().includes(titleVariation.toLowerCase()) ||
-                            titleVariation.toLowerCase().includes(book.title.toLowerCase());
-          if (!titleMatch) {
-            continue;
-          }
+          const bookTitleLower = book.title.toLowerCase();
+          const searchTitleLower = titleVariation.toLowerCase();
+          const titleMatch = bookTitleLower.includes(searchTitleLower) ||
+                            searchTitleLower.includes(bookTitleLower);
+          if (!titleMatch) continue;
           
           // Try cover_i first (most reliable)
           if (book.cover_i) {
             const coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-${size}.jpg`;
-            // Validate URL domain before using
             if (isAllowedImageUrl(coverUrl) && await testImageExists(coverUrl)) {
               return coverUrl;
             }
@@ -129,7 +109,7 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
         }
       }
     } catch (error) {
-      console.warn('Open Library search failed for variation:', titleVariation, error);
+      // Silently continue to next variation
       continue;
     }
   }
@@ -149,7 +129,6 @@ const tryGoogleBooks = async (title: string, author?: string): Promise<string | 
     if (!response.ok) return null;
     
     const rawData = await response.json();
-    // Validate API response
     const data = validateGoogleBooksResponse(rawData);
     
     if (data.items && data.items.length > 0) {
@@ -161,7 +140,6 @@ const tryGoogleBooks = async (title: string, author?: string): Promise<string | 
           if (coverUrl) {
             // Convert http to https if needed
             const httpsUrl = coverUrl.replace('http://', 'https://');
-            // Validate URL before using
             if (await testImageExists(httpsUrl)) {
               return httpsUrl;
             }
@@ -172,7 +150,6 @@ const tryGoogleBooks = async (title: string, author?: string): Promise<string | 
     
     return null;
   } catch (error) {
-    console.warn('Google Books search failed:', error);
     return null;
   }
 };
@@ -187,75 +164,61 @@ const testImageExists = (url: string): Promise<boolean> => {
     img.onerror = () => resolve(false);
     img.src = url;
     
-    // Timeout after 2 seconds for faster performance
-    setTimeout(() => resolve(false), 2000);
+    // Timeout after 3 seconds
+    setTimeout(() => resolve(false), 3000);
   });
 };
 
 /**
- * Enhanced book cover fetching with multiple fallbacks
+ * Main function to fetch book cover with multiple fallbacks
+ * Tries OpenLibrary first, then Google Books
  */
 export const getBookCover = async (
   title: string, 
   author?: string, 
   size: 'S' | 'M' | 'L' = 'M'
 ): Promise<string | null> => {
-  if (!title) return null;
+  if (!title || title.trim().length === 0) return null;
   
   // Create cache key
-  const cacheKey = `${title.toLowerCase()}-${author?.toLowerCase() || ''}-${size}`;
+  const cacheKey = `${title.toLowerCase().trim()}-${author?.toLowerCase().trim() || ''}-${size}`;
   
-  // Check cache first
+  // Check success cache first
   if (coverCache.has(cacheKey)) {
     return coverCache.get(cacheKey)!;
   }
   
+  // Check failed cache to avoid repeated failed API calls
+  if (failedCache.has(cacheKey)) {
+    return null;
+  }
+  
   try {
-    console.log('Fetching book cover for:', title, 'by', author);
-    
-    // 1. Check manual mappings first
-    const manualKey = `${title.toLowerCase()}${author ? ` ${author.toLowerCase()}` : ''}`.trim();
-    const manualMapping = MANUAL_COVER_MAPPINGS[manualKey] || MANUAL_COVER_MAPPINGS[title.toLowerCase()];
-    
-    if (manualMapping) {
-      const adjustedUrl = manualMapping.replace(/-[SML]\.jpg$/, `-${size}.jpg`);
-      // Add timestamp to force cache refresh
-      const cachedUrl = `${adjustedUrl}?v=${Date.now()}`;
-      if (await testImageExists(adjustedUrl)) {
-        coverCache.set(cacheKey, cachedUrl);
-        console.log('Found manual mapping for:', title);
-        return cachedUrl;
-      }
-    }
-    
-    // 2. Try Open Library with enhanced search
-    console.log('Trying Open Library for:', title);
+    // 1. Try Open Library first (free, no API key needed)
     const openLibraryResult = await tryOpenLibrary(title, author, size);
     if (openLibraryResult) {
       coverCache.set(cacheKey, openLibraryResult);
-      console.log('Found Open Library cover for:', title);
       return openLibraryResult;
     }
     
-    // 3. Try Google Books as fallback
-    console.log('Trying Google Books for:', title);
+    // 2. Try Google Books as fallback (free, no API key needed for basic usage)
     const googleBooksResult = await tryGoogleBooks(title, author);
     if (googleBooksResult) {
       coverCache.set(cacheKey, googleBooksResult);
-      console.log('Found Google Books cover for:', title);
       return googleBooksResult;
     }
     
-    console.log('No cover found for:', title, 'by', author);
+    // Mark as failed to avoid repeated lookups
+    failedCache.add(cacheKey);
     return null;
   } catch (error) {
-    console.error('Error fetching book cover for', title, ':', error);
+    failedCache.add(cacheKey);
     return null;
   }
 };
 
 /**
- * Component for displaying book covers with fallback
+ * React component for displaying book covers with loading state and fallback
  */
 export const BookCover: React.FC<{
   title: string;
@@ -269,29 +232,37 @@ export const BookCover: React.FC<{
   const [error, setError] = React.useState(false);
 
   React.useEffect(() => {
+    let mounted = true;
+    
     const fetchCover = async () => {
       setLoading(true);
       setError(false);
       
-      // Use cache - don't clear on every render
       const url = await getBookCover(title, author, size);
-      if (url) {
-        setCoverUrl(url);
-        setLoading(false);
-      } else {
-        setError(true);
+      
+      if (mounted) {
+        if (url) {
+          setCoverUrl(url);
+        } else {
+          setError(true);
+        }
         setLoading(false);
       }
     };
 
-    if (title) {
+    if (title && title.trim().length > 0) {
       fetchCover();
     } else {
       setLoading(false);
       setError(true);
     }
+    
+    return () => {
+      mounted = false;
+    };
   }, [title, author, size]);
 
+  // Loading state
   if (loading) {
     return (
       <div className={`bg-muted animate-pulse ${className}`}>
@@ -302,6 +273,7 @@ export const BookCover: React.FC<{
     );
   }
 
+  // Error/fallback state - show a styled placeholder
   if (error || !coverUrl) {
     return (
       <div className={`bg-gradient-primary ${fallbackClassName || className}`}>
@@ -312,6 +284,7 @@ export const BookCover: React.FC<{
     );
   }
 
+  // Success - show the cover image
   return (
     <img
       src={coverUrl}

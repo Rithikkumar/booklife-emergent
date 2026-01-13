@@ -147,7 +147,7 @@ export const ChatRoomList: React.FC<ChatRoomListProps> = ({
         })) as ChatRoom[]);
       }
     } catch (error) {
-      console.error('Error fetching rooms:', error);
+      logger.error('[ChatRoomList] Error fetching rooms:', error);
     } finally {
       setLoading(false);
     }

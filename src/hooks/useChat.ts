@@ -93,11 +93,13 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
   // Check rate limit
   const checkRateLimit = useCallback(() => {
     const now = Date.now();
-    const recentMessages = messageTimestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    const recentMessages = messageTimestamps.filter(
+      ts => now - ts < CHAT_CONFIG.RATE_LIMIT_WINDOW
+    );
     
-    if (recentMessages.length >= RATE_LIMIT_MAX) {
+    if (recentMessages.length >= CHAT_CONFIG.RATE_LIMIT_MAX) {
       const oldestMessage = Math.min(...recentMessages);
-      const waitTime = Math.ceil((RATE_LIMIT_WINDOW - (now - oldestMessage)) / 1000);
+      const waitTime = Math.ceil((CHAT_CONFIG.RATE_LIMIT_WINDOW - (now - oldestMessage)) / 1000);
       setIsRateLimited(true);
       setRetryAfter(waitTime);
       return false;

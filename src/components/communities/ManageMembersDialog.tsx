@@ -184,7 +184,6 @@ const ManageMembersDialog: React.FC<ManageMembersDialogProps> = ({
         return `Are you sure you want to demote ${memberName} to regular member?`;
       case 'remove':
         return `Are you sure you want to remove ${memberName} from the community? They will lose access immediately.`;
-import { logger } from '@/utils/logger';
       default:
         return '';
     }

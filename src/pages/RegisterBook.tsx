@@ -981,7 +981,7 @@ const RegisterBook = () => {
               </div>
               
               <div className="footer">
-                Scan or enter code at bookpassing.com
+                Scan or enter code at {APP_CONFIG.domain}
               </div>
             </div>
           </div>

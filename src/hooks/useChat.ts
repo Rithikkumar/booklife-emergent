@@ -535,7 +535,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
     
     typingTimeoutRef.current = setTimeout(() => {
       stopTyping();
-    }, 2000);
+    }, CHAT_CONFIG.TYPING_TIMEOUT);
   }, [startTyping, stopTyping]);
 
   // Set up real-time subscriptions

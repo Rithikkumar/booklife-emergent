@@ -56,7 +56,6 @@ const BookDetails: React.FC = () => {
 
   const handleGoBack = () => {
     const from = (location.state as any)?.from as string | undefined;
-    console.log('[BookDetails] handleGoBack', { from, historyLength: window.history.length, current: location.pathname });
     if (from) {
       navigate(from, { replace: true });
       return;

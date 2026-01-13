@@ -230,7 +230,7 @@ export const useDirectMessages = (conversationId?: string) => {
       // Map profiles and replies to messages (no async operations here)
       const messagesWithDetails: DirectMessage[] = messagesData.map(msg => ({
         ...msg,
-        reactions: msg.reactions || {},
+        reactions: (msg.reactions as Record<string, string[]>) || {},
         sender: profileMap.get(msg.sender_id),
         reply_to: msg.reply_to_id ? replyMap.get(msg.reply_to_id) : undefined
       }));

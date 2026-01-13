@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Send, Smile, X, AlertTriangle } from 'lucide-react';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import type { ChatMessage } from '@/hooks/useChat';
+import { CHAT_CONFIG } from '@/constants/chat';
 
 interface ChatInputProps {
   onSend: (message: string, replyToId?: string) => Promise<boolean>;
@@ -32,7 +33,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   retryAfter = 0,
   disabled = false,
   placeholder = 'Type a message...',
-  maxLength = 2000
+  maxLength = CHAT_CONFIG.MAX_MESSAGE_LENGTH
 }) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);

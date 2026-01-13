@@ -13,12 +13,53 @@ export interface LocationData {
 }
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
-const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests (Nominatim policy)
+const MIN_REQUEST_INTERVAL = 1100; // Slightly over 1 second to be safe with Nominatim policy
 let lastRequestTime = 0;
 
-// Simple in-memory cache for recent searches
-const searchCache = new Map<string, { results: LocationData[], timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// LocalStorage cache key
+const CACHE_STORAGE_KEY = 'bookpassing_location_cache';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours - locations don't change often
+
+// In-memory cache backed by localStorage
+let memoryCache: Map<string, { results: LocationData[], timestamp: number }> = new Map();
+
+// Initialize cache from localStorage
+function initCache() {
+  if (memoryCache.size === 0) {
+    try {
+      const stored = localStorage.getItem(CACHE_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const now = Date.now();
+        // Only restore non-expired entries
+        Object.entries(parsed).forEach(([key, value]: [string, any]) => {
+          if (now - value.timestamp < CACHE_DURATION) {
+            memoryCache.set(key, value);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to load location cache from localStorage');
+    }
+  }
+}
+
+// Save cache to localStorage (debounced)
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+function saveCache() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      const cacheObj: Record<string, any> = {};
+      memoryCache.forEach((value, key) => {
+        cacheObj[key] = value;
+      });
+      localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(cacheObj));
+    } catch (e) {
+      console.warn('Failed to save location cache to localStorage');
+    }
+  }, 1000);
+}
 
 async function waitForRateLimit() {
   const now = Date.now();
@@ -35,103 +76,80 @@ async function waitForRateLimit() {
 export const searchLocations = async (query: string): Promise<LocationData[]> => {
   if (query.length < 2) return [];
   
-  console.log('🌐 Geocoding API called for:', query);
-
-  // Check cache first
+  // Initialize cache from localStorage on first call
+  initCache();
+  
   const cacheKey = query.toLowerCase().trim();
-  const cached = searchCache.get(cacheKey);
+  
+  // Check cache first
+  const cached = memoryCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-    console.log('✅ Cache hit for:', query, '- returning', cached.results.length, 'results');
     return cached.results;
   }
 
   try {
     // Wait for rate limiting
     await waitForRateLimit();
-    console.log('⏳ Rate limit wait complete, making API request...');
 
-    // Try primary search first
+    // Global search - no country bias
     const response = await fetch(
-      `${NOMINATIM_BASE_URL}/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=15&extratags=1&accept-language=en`
+      `${NOMINATIM_BASE_URL}/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=12&accept-language=en`
     );
 
     if (!response.ok) {
-      console.error('❌ API response not OK:', response.status, response.statusText);
       if (response.status === 429) {
         throw new Error('RATE_LIMIT');
       }
       throw new Error('NETWORK_ERROR');
     }
-    
-    console.log('✅ API response received successfully');
 
     const rawResults = await response.json();
-    // Validate API response
     let allResults: ValidatedNominatimResult[] = validateNominatimResponse(rawResults);
-
-    // Only try fallback strategies if primary search returns no results
-    if (allResults.length === 0) {
-      const fallbackQueries = [
-        `${query}, India`,
-        `${query} village, India`
-      ];
-
-      for (const fallbackQuery of fallbackQueries) {
-        await waitForRateLimit(); // Rate limit between fallback attempts
-        
-        const fallbackResponse = await fetch(
-          `${NOMINATIM_BASE_URL}/search?q=${encodeURIComponent(fallbackQuery)}&format=json&addressdetails=1&limit=10&extratags=1&accept-language=en`
-        );
-
-        if (fallbackResponse.ok) {
-          const rawFallbackResults = await fallbackResponse.json();
-          const results = validateNominatimResponse(rawFallbackResults);
-          if (results.length > 0) {
-            allResults = results;
-            break;
-          }
-        }
-      }
-    }
     
     const processedResults = allResults
       .filter(result => result.address)
       .map(result => {
         const addr = result.address!;
         
-        // Extract location components with priority order - be more inclusive for villages
-        const neighborhood = addr.neighbourhood || addr.suburb || addr.hamlet;
-        const city = addr.city || addr.town || addr.village || addr.municipality;
-        const district = addr.district || addr.county || addr.state_district;
-        const state = addr.state;
+        // Extract location components with global priority order
+        const neighborhood = addr.neighbourhood || addr.suburb || addr.hamlet || addr.quarter;
+        const city = addr.city || addr.town || addr.village || addr.municipality || addr.locality;
+        const district = addr.district || addr.county || addr.state_district || addr.region;
+        const state = addr.state || addr.province;
         const country = addr.country || '';
         const countryCode = addr.country_code?.toUpperCase();
         
-        // For villages and small places, be more flexible with what we consider a valid location
-        const primaryLocation = city || neighborhood || district;
+        // For any place type, be flexible with what we consider a valid location
+        const primaryLocation = city || neighborhood || district || addr.name;
         
         // Create proper formatted address with administrative hierarchy
-        let formattedParts = [];
+        const formattedParts: string[] = [];
         
         // Add the most specific location first
         if (primaryLocation) {
-          formattedParts.push(primaryLocation);
-          
-          // Add village designation if it's clearly a village
+          // Add place type indicator for small places
           if (addr.village && addr.village === primaryLocation) {
-            formattedParts[0] = `${primaryLocation} (Village)`;
+            formattedParts.push(`${primaryLocation} (Village)`);
+          } else if (addr.hamlet && addr.hamlet === primaryLocation) {
+            formattedParts.push(`${primaryLocation} (Hamlet)`);
+          } else if (addr.town && addr.town === primaryLocation) {
+            formattedParts.push(`${primaryLocation} (Town)`);
+          } else {
+            formattedParts.push(primaryLocation);
           }
         }
         
-        // Add district if it's different from the primary location
+        // Add district if different from primary and state
         if (district && district !== primaryLocation && district !== state) {
-          formattedParts.push(`${district} District`);
+          formattedParts.push(district);
         }
         
+        // Add state/province if different
         if (state && state !== primaryLocation && state !== district) {
           formattedParts.push(state);
         }
         
+        // Always add country for global clarity
         if (country) {
           formattedParts.push(country);
         }
@@ -143,7 +161,6 @@ export const searchLocations = async (query: string): Promise<LocationData[]> =>
           state,
           country,
           countryCode,
-          stateCode: addr.country_code === 'in' ? state?.split(' ').map(w => w[0]).join('') : undefined,
           coordinates: [parseFloat(result.lat), parseFloat(result.lon)] as [number, number],
           formattedAddress: formattedParts.join(', ')
         };
@@ -151,42 +168,36 @@ export const searchLocations = async (query: string): Promise<LocationData[]> =>
       .filter(location => 
         location.coordinates[0] && 
         location.coordinates[1] && 
-        location.city !== 'Unknown Location'
+        location.city !== 'Unknown Location' &&
+        location.formattedAddress.length > 0
       )
-      // Remove duplicates based on coordinates
+      // Remove duplicates based on formatted address (more reliable than coordinates)
+      .filter((location, index, self) => 
+        index === self.findIndex(l => l.formattedAddress === location.formattedAddress)
+      )
+      // Secondary dedup by coordinates (for slightly different names of same place)
       .filter((location, index, self) => 
         index === self.findIndex(l => 
-          Math.abs(l.coordinates[0] - location.coordinates[0]) < 0.001 &&
-          Math.abs(l.coordinates[1] - location.coordinates[1]) < 0.001
+          Math.abs(l.coordinates[0] - location.coordinates[0]) < 0.01 &&
+          Math.abs(l.coordinates[1] - location.coordinates[1]) < 0.01
         )
       );
 
-    // Cache successful results
-    if (processedResults.length > 0) {
-      console.log('💾 Caching', processedResults.length, 'results for:', query);
-      searchCache.set(cacheKey, {
-        results: processedResults,
-        timestamp: Date.now()
-      });
-    } else {
-      console.log('⚠️ No results to cache for:', query);
-    }
+    // Cache results (even empty results to avoid repeated failed searches)
+    memoryCache.set(cacheKey, {
+      results: processedResults,
+      timestamp: Date.now()
+    });
+    saveCache();
 
     return processedResults;
   } catch (error: any) {
-    console.error('❌ Geocoding error:', error);
-    
-    // Throw specific errors for better handling
     if (error.message === 'RATE_LIMIT') {
-      console.error('🚫 Rate limit hit');
       throw new Error('Too many searches. Please wait a moment and try again.');
     }
     if (error.message === 'NETWORK_ERROR') {
-      console.error('🌐 Network error detected');
       throw new Error('Network error. Please check your connection and try again.');
     }
-    
-    console.error('⚠️ Unknown error, returning empty results');
     return [];
   }
 };
@@ -197,4 +208,10 @@ export const geocodeLocation = async (neighborhood?: string, city?: string): Pro
   const query = neighborhood ? `${neighborhood}, ${city}` : city;
   const results = await searchLocations(query);
   return results[0] || null;
+};
+
+// Clear the location cache (useful for debugging)
+export const clearLocationCache = () => {
+  memoryCache.clear();
+  localStorage.removeItem(CACHE_STORAGE_KEY);
 };

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, X, Link, Users, Lock, Image, Copy, Check, Upload, Camera } from "lucide-react";
 import ActionButton from '@/components/common/ActionButton';
+import { getCommunityJoinUrl } from "@/constants/appConfig";
 
 interface CreateCommunityDialogProps {
   onCreateCommunity?: (communityData: any) => void;

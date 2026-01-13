@@ -247,7 +247,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
         setHasMore(data.length === pageSize);
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('[Chat] Error fetching messages:', error);
       toast({
         title: "Error",
         description: "Failed to load messages",
@@ -288,7 +288,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
         setMembers(membersWithProfiles);
       }
     } catch (error) {
-      console.error('Error fetching members:', error);
+      logger.error('[Chat] Error fetching members:', error);
     }
   }, [roomId]);
 
@@ -363,7 +363,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
 
       return true;
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('[Chat] Error sending message:', error);
       
       // Mark message as failed
       setMessages(prev => 
@@ -439,7 +439,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating reaction:', error);
+      logger.error('[Chat] Error updating reaction:', error);
       // Revert on error
       setMessages(prev => 
         prev.map(msg => 
@@ -467,7 +467,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error deleting message:', error);
+      logger.error('[Chat] Error deleting message:', error);
       // Revert on error
       setMessages(prev => [...prev, messageToDelete].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -491,7 +491,7 @@ export const useChat = ({ roomId, pageSize = CHAT_CONFIG.MESSAGES_PER_PAGE }: Us
         .eq('room_id', roomId)
         .eq('user_id', currentUserId);
     } catch (error) {
-      console.error('Error marking as read:', error);
+      logger.error('[Chat] Error marking as read:', error);
     }
   }, [currentUserId, roomId]);
 

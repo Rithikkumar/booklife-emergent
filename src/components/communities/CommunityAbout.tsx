@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-import { logger } from '@/utils/logger';
   Users, 
   Crown, 
   Shield, 
@@ -24,6 +23,7 @@ import { CommunityMember } from '@/hooks/useCommunityChat';
 import TagList from '@/components/common/TagList';
 import CommunityStats from '@/components/communities/CommunityStats';
 import { useCommunityAnalytics } from '@/hooks/useCommunityAnalytics';
+import { logger } from '@/utils/logger';
 
 interface CommunityAboutProps {
   community: CommunityDetails;

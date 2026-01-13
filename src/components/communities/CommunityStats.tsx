@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-import { logger } from '@/utils/logger';
   Users, 
   MessageSquare, 
   TrendingUp, 
@@ -11,6 +10,7 @@ import { logger } from '@/utils/logger';
 } from 'lucide-react';
 import { CommunityAnalytics } from '@/hooks/useCommunityAnalytics';
 import { formatActivityTime } from '@/utils/activityHelpers';
+import { logger } from '@/utils/logger';
 
 interface CommunityStatsProps {
   analytics: CommunityAnalytics | null;

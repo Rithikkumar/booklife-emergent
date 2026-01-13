@@ -138,6 +138,12 @@ const NominatimAddressSchema = z.object({
   state_district: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
   municipality: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
   hamlet: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
+  // Additional Nominatim fields for global coverage
+  quarter: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
+  locality: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
+  region: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
+  province: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
+  name: z.string().transform(val => sanitizeString(val, MAX_LOCATION_NAME_LENGTH)).optional(),
 }).optional();
 
 const NominatimResultSchema = z.object({

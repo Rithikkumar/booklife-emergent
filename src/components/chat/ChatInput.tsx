@@ -185,6 +185,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               'placeholder:text-muted-foreground/60'
             )}
             rows={1}
+            data-testid="chat-message-input"
           />
           
           {/* Character count */}
@@ -192,7 +193,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             <span className={cn(
               'absolute right-3 bottom-2 text-xs',
               remainingChars < 50 ? 'text-destructive' : 'text-muted-foreground'
-            )}>
+            )} data-testid="char-count">
               {remainingChars}
             </span>
           )}
@@ -209,6 +210,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           )}
           onClick={handleSend}
           disabled={!message.trim() || sending || disabled || isRateLimited}
+          data-testid="chat-send-btn"
         >
           <Send className={cn(
             'h-4 w-4 transition-transform',

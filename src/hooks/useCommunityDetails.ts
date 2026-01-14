@@ -122,6 +122,9 @@ export const useCommunityDetails = (communityId?: string) => {
 
       setCommunity(newCommunity);
 
+      // Track community view for analytics and recommendations
+      trackInteraction(communityId, 'view');
+
     } catch (error) {
       logger.error('Error fetching community details:', error);
       toast({
@@ -132,7 +135,7 @@ export const useCommunityDetails = (communityId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [communityId, toast, analytics]);
+  }, [communityId, toast, analytics, trackInteraction]);
 
   const refreshMembershipStatus = useCallback(async () => {
     if (!communityId) return;

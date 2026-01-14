@@ -9,6 +9,7 @@ import CommunityActivity from '@/components/communities/CommunityActivity';
 import CommunityAbout from '@/components/communities/CommunityAbout';
 import { useCommunityDetails } from '@/hooks/useCommunityDetails';
 import { useCommunityChat } from '@/hooks/useCommunityChat';
+import { useCommunityGrowth } from '@/hooks/useCommunityGrowth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

@@ -35,6 +35,8 @@ const CommunityDetail: React.FC = () => {
     loading: membersLoading,
   } = useCommunityChat(communityId);
 
+  const { growth } = useCommunityGrowth(communityId);
+
   const handleBack = () => {
     navigate('/communities');
   };

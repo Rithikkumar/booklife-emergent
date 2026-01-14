@@ -257,6 +257,9 @@ export const useCommunityDetails = (communityId?: string) => {
             title: "Joined Community",
             description: `Welcome to ${community.name}!`,
           });
+          
+          // Track join action for recommendations
+          trackInteraction(communityId, 'join');
         }
 
         // Refresh community details and analytics immediately
@@ -281,7 +284,7 @@ export const useCommunityDetails = (communityId?: string) => {
         setJoining(false);
       }
     }
-  }, [communityId, community, joinRequestStatus, fetchCommunityDetails, refreshAnalytics, toast]);
+  }, [communityId, community, joinRequestStatus, fetchCommunityDetails, refreshAnalytics, trackInteraction, toast]);
 
   const confirmLeaveCommunity = useCallback(async () => {
     if (!communityId || !community) return;

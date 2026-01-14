@@ -319,6 +319,9 @@ export const useCommunityDetails = (communityId?: string) => {
         description: `You've left ${community.name}`,
       });
 
+      // Track leave action for recommendations
+      trackInteraction(communityId, 'leave');
+
       // Refresh community details and analytics immediately
       await Promise.all([
         refreshMembershipStatus(),
@@ -340,7 +343,7 @@ export const useCommunityDetails = (communityId?: string) => {
     } finally {
       setJoining(false);
     }
-  }, [communityId, community, fetchCommunityDetails, toast]);
+  }, [communityId, community, fetchCommunityDetails, trackInteraction, toast]);
 
   // Initial load and setup real-time subscriptions
   useEffect(() => {

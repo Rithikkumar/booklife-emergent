@@ -15,9 +15,10 @@ import { calculateActivityLevel, formatLastActivity } from '@/utils/activityHelp
 
 interface CommunityActivityProps {
   community: CommunityDetails;
+  weeklyGrowth?: number; // New prop for real member growth
 }
 
-const CommunityActivity: React.FC<CommunityActivityProps> = ({ community }) => {
+const CommunityActivity: React.FC<CommunityActivityProps> = ({ community, weeklyGrowth = 0 }) => {
   const activityInfo = calculateActivityLevel(community.messageCount, community.members);
   
   const getActivityIcon = () => {
@@ -97,11 +98,13 @@ const CommunityActivity: React.FC<CommunityActivityProps> = ({ community }) => {
                 <span className="text-muted-foreground">Last message</span>
                 <span className="font-medium">{formatLastActivity(community.lastActivity)}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <span className="text-muted-foreground">Community growing</span>
-                <Badge variant="secondary" className="text-xs">+{Math.floor(Math.random() * 5) + 1} members this week</Badge>
-              </div>
+              {weeklyGrowth > 0 && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                  <span className="text-muted-foreground">Community growing</span>
+                  <Badge variant="secondary" className="text-xs">+{weeklyGrowth} members this week</Badge>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 bg-purple-500 rounded-full" />
                 <span className="text-muted-foreground">Engagement</span>

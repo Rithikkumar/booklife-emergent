@@ -127,7 +127,7 @@ const CommunityDetail: React.FC = () => {
         );
         
       case 'activity':
-        return <CommunityActivity community={community} />;
+        return <CommunityActivity community={community} weeklyGrowth={growth?.weeklyNewMembers || 0} />;
         
       case 'about':
         return (

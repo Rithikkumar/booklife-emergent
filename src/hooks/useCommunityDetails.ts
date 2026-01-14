@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Community } from '@/types';
 import { useCommunityAnalytics } from './useCommunityAnalytics';
+import { useTrackInteraction } from './useCommunityGrowth';
 import { logger } from '@/utils/logger';
 
 export interface CommunityDetails extends Community {
@@ -23,6 +24,7 @@ export const useCommunityDetails = (communityId?: string) => {
   const [joinRequestStatus, setJoinRequestStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
   const { toast } = useToast();
   const { analytics, refreshAnalytics } = useCommunityAnalytics(communityId);
+  const { trackInteraction } = useTrackInteraction();
 
   const fetchCommunityDetails = useCallback(async (forceUpdate = false) => {
     if (!communityId) return;

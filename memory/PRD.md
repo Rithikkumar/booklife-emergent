@@ -68,7 +68,7 @@
 
 ---
 
-## Recent Changes (January 13, 2025)
+## Recent Changes (January 13-14, 2025)
 
 ### Database Migrations Applied
 1. **Added to `user_books`:**
@@ -99,6 +99,29 @@
 
 3. **UI Fixes:**
    - Fixed duplicate "Messages" header
+
+4. **Community Recommendations System (NEW):**
+   - Created `/src/hooks/useCommunityGrowth.ts`
+   - Rule-based recommendation algorithm:
+     - Tag matching (content-based)
+     - Popularity scoring
+     - Activity scoring
+   - Client-side fallback when Edge Function unavailable
+   - Caches recommendations for 24 hours
+   - Tracks: views, joins, leaves, messages, reactions
+
+5. **User Interaction Analytics (NEW):**
+   - Tracks community views, joins, leaves
+   - Weekly growth calculation (new members, messages)
+   - Fixed unstable "Community growing" numbers (removed Math.random())
+   - Real growth data now passed to CommunityActivity component
+
+6. **Files Created/Modified:**
+   - `/src/hooks/useCommunityGrowth.ts` - NEW
+   - `/src/hooks/useCommunityRecommendations.ts` - Updated with client-side fallback
+   - `/src/hooks/useCommunityDetails.ts` - Added interaction tracking
+   - `/src/components/communities/CommunityActivity.tsx` - Fixed random numbers
+   - `/src/pages/CommunityDetail.tsx` - Integrated growth tracking
 
 ---
 

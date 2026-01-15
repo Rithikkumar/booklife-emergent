@@ -74,9 +74,20 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return null;
   }
 
+  // If profile completion is required but profile is incomplete (and not on onboarding page)
+  if (requireAuth && user && requireProfileComplete && !profileComplete && location.pathname !== '/onboarding') {
+    navigate('/onboarding', { replace: true });
+    return null;
+  }
+
   // If authentication is not required but user is authenticated and on auth page
   if (!requireAuth && user && location.pathname === '/auth') {
-    navigate('/explore', { replace: true });
+    // Check profile completion before redirecting
+    if (!profileComplete) {
+      navigate('/onboarding', { replace: true });
+    } else {
+      navigate('/explore', { replace: true });
+    }
     return null;
   }
 

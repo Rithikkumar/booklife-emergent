@@ -184,6 +184,7 @@ const App = () => {
           } />
           
           {/* Catch-all route */}
+          <Route path="/test-onboarding" element={<OnboardingTest />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
           </BrowserRouter>

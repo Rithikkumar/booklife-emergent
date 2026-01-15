@@ -100,16 +100,22 @@ Implemented a comprehensive 4-step onboarding wizard for new users:
 
 **Files Created/Modified:**
 - `/src/pages/Onboarding.tsx` - 4-step wizard with framer-motion animations
-- `/src/pages/Auth.tsx` - Added profile completion check on login
+- `/src/pages/Auth.tsx` - Added profile completion check on login, disabled browser autocomplete
 - `/src/components/auth/AuthGuard.tsx` - Added `requireProfileComplete` prop
 - `/src/contexts/AuthContext.tsx` - Added `profileComplete` state
-- `/src/pages/AuthCallback.tsx` - Redirects incomplete profiles to onboarding
+- `/src/pages/AuthCallback.tsx` - Handles email confirmation + OAuth callback, redirects to onboarding
 - `/src/App.tsx` - Added `/onboarding` route
 
 **Auth Flow:**
-- Sign up → Email verification → AuthCallback → Onboarding (if profile incomplete) → App
+- Sign up → Email verification → AuthCallback (verifyOtp) → Onboarding → App
 - Sign in → Profile check → Onboarding (if incomplete) or App
 - OAuth → AuthCallback → Profile check → Onboarding or App
+
+**Bug Fixes Applied:**
+- Disabled browser autocomplete on auth form inputs (`autoComplete="off"`)
+- Form fields clear when switching between Sign In/Sign Up tabs
+- Username auto-converts to lowercase with enhanced visual feedback
+- AuthCallback properly handles email confirmation tokens
 
 ---
 

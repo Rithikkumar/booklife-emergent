@@ -68,7 +68,47 @@
 
 ---
 
-## Recent Changes (January 13-14, 2025)
+## Recent Changes (January 15, 2025)
+
+### New User Onboarding Flow (COMPLETED)
+Implemented a comprehensive 4-step onboarding wizard for new users:
+
+1. **Step 1 - Username:**
+   - @ prefix display
+   - Validation: 3-30 chars, alphanumeric + underscore only
+   - Debounced uniqueness check against Supabase
+   - Real-time availability indicator (✓/✕)
+
+2. **Step 2 - Profile Setup:**
+   - Display name input (min 2 chars)
+   - Profile picture upload with image compression
+   - Avatar preview with first letter fallback
+
+3. **Step 3 - Privacy:**
+   - Public/Private radio button selection
+   - Clear descriptions for each option
+
+4. **Step 4 - Bio & Preview:**
+   - Optional bio textarea (200 char limit)
+   - Full profile preview before completion
+   - Complete button to save profile
+
+**Files Created/Modified:**
+- `/src/pages/Onboarding.tsx` - 4-step wizard with framer-motion animations
+- `/src/pages/Auth.tsx` - Added profile completion check on login
+- `/src/components/auth/AuthGuard.tsx` - Added `requireProfileComplete` prop
+- `/src/contexts/AuthContext.tsx` - Added `profileComplete` state
+- `/src/pages/AuthCallback.tsx` - Redirects incomplete profiles to onboarding
+- `/src/App.tsx` - Added `/onboarding` route
+
+**Auth Flow:**
+- Sign up → Email verification → AuthCallback → Onboarding (if profile incomplete) → App
+- Sign in → Profile check → Onboarding (if incomplete) or App
+- OAuth → AuthCallback → Profile check → Onboarding or App
+
+---
+
+## Previous Changes (January 13-14, 2025)
 
 ### Database Migrations Applied
 1. **Added to `user_books`:**
@@ -100,28 +140,14 @@
 3. **UI Fixes:**
    - Fixed duplicate "Messages" header
 
-4. **Community Recommendations System (NEW):**
+4. **Community Recommendations System:**
    - Created `/src/hooks/useCommunityGrowth.ts`
-   - Rule-based recommendation algorithm:
-     - Tag matching (content-based)
-     - Popularity scoring
-     - Activity scoring
+   - Rule-based recommendation algorithm
    - Client-side fallback when Edge Function unavailable
-   - Caches recommendations for 24 hours
-   - Tracks: views, joins, leaves, messages, reactions
 
-5. **User Interaction Analytics (NEW):**
+5. **User Interaction Analytics:**
    - Tracks community views, joins, leaves
-   - Weekly growth calculation (new members, messages)
-   - Fixed unstable "Community growing" numbers (removed Math.random())
-   - Real growth data now passed to CommunityActivity component
-
-6. **Files Created/Modified:**
-   - `/src/hooks/useCommunityGrowth.ts` - NEW
-   - `/src/hooks/useCommunityRecommendations.ts` - Updated with client-side fallback
-   - `/src/hooks/useCommunityDetails.ts` - Added interaction tracking
-   - `/src/components/communities/CommunityActivity.tsx` - Fixed random numbers
-   - `/src/pages/CommunityDetail.tsx` - Integrated growth tracking
+   - Weekly growth calculation
 
 ---
 
@@ -129,6 +155,7 @@
 
 ### ✅ READY FOR PRODUCTION
 - User authentication & profiles
+- **New user onboarding flow** ✨
 - Book registration with codes
 - Book journey tracking
 - Communities with messaging
@@ -141,17 +168,20 @@
 
 ### ⚠️ OPTIONAL FEATURES (Not Critical)
 - In-app notification bell (table exists, not populated)
-- Community recommendations (table exists, not used)
-- User interaction tracking (table exists, not used)
+- Community recommendations (table exists, client-side fallback implemented)
+- User interaction tracking (implemented, tables may not be populated)
 
 ### 📋 RECOMMENDED ENHANCEMENTS
 1. Populate `notifications` table when events occur
 2. Test book passing flow end-to-end
-3. Consider implementing recommendation system
+3. Fix book cover fetching from OpenLibrary/Google Books API
+4. Enforce book code generation during registration
 
 ---
 
 ## Key Files Reference
+- `/src/pages/Onboarding.tsx` - New user onboarding wizard
+- `/src/components/auth/AuthGuard.tsx` - Route protection with profile check
 - `/src/hooks/useDirectMessages.ts` - DM logic (optimized)
 - `/src/hooks/useChat.ts` - Community chat logic
 - `/src/hooks/useBookJourney.ts` - Book journey tracking

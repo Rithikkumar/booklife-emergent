@@ -15,22 +15,35 @@ const AuthCallback: React.FC = () => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          logger.error('OAuth callback error:', sessionError);
+          logger.error('[AuthCallback] OAuth callback error:', sessionError);
           setError(sessionError.message);
           setTimeout(() => navigate('/auth'), 3000);
           return;
         }
 
         if (session) {
-          // Successfully authenticated - redirect to explore
-          navigate('/explore', { replace: true });
+          // Check if profile is complete
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, display_name')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          if (!profile?.username || !profile?.display_name) {
+            // Profile incomplete - redirect to onboarding
+            logger.debug('[AuthCallback] Profile incomplete, redirecting to onboarding');
+            navigate('/onboarding', { replace: true });
+          } else {
+            // Profile complete - redirect to explore
+            navigate('/explore', { replace: true });
+          }
         } else {
           // No session found - might be an error or user cancelled
           setError('Authentication was cancelled or failed. Redirecting...');
           setTimeout(() => navigate('/auth'), 2000);
         }
       } catch (err) {
-        logger.error('Unexpected error during OAuth callback:', err);
+        logger.error('[AuthCallback] Unexpected error during OAuth callback:', err);
         setError('An unexpected error occurred. Redirecting...');
         setTimeout(() => navigate('/auth'), 3000);
       }

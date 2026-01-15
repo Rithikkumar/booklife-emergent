@@ -305,6 +305,7 @@ const Onboarding: React.FC = () => {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
                 <Input
                   id="username"
+                  data-testid="onboarding-username-input"
                   value={data.username}
                   onChange={(e) => setData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
                   placeholder="your_username"
@@ -313,16 +314,16 @@ const Onboarding: React.FC = () => {
                   autoFocus
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isCheckingUsername && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                  {!isCheckingUsername && usernameAvailable === true && <Check className="h-4 w-4 text-green-500" />}
-                  {!isCheckingUsername && usernameAvailable === false && <span className="text-destructive text-xs">✕</span>}
+                  {isCheckingUsername && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" data-testid="username-checking-spinner" />}
+                  {!isCheckingUsername && usernameAvailable === true && <Check className="h-4 w-4 text-green-500" data-testid="username-available-check" />}
+                  {!isCheckingUsername && usernameAvailable === false && <span className="text-destructive text-xs" data-testid="username-unavailable-x">✕</span>}
                 </div>
               </div>
               {usernameError && (
-                <p className="text-sm text-destructive">{usernameError}</p>
+                <p className="text-sm text-destructive" data-testid="username-error">{usernameError}</p>
               )}
               {usernameAvailable && !usernameError && (
-                <p className="text-sm text-green-600">Username is available!</p>
+                <p className="text-sm text-green-600" data-testid="username-available-message">Username is available!</p>
               )}
               <p className="text-xs text-muted-foreground">
                 3-30 characters. Letters, numbers, and underscores only.

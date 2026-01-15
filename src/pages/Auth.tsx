@@ -63,6 +63,14 @@ const Auth: React.FC = () => {
     }
   }, [location.search]);
 
+  // Clear form fields when switching tabs
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setValidationErrors([]);
+  }, [activeTab]);
+
   useEffect(() => {
     const checkAndRedirect = async () => {
       if (user) {

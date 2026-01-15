@@ -82,7 +82,7 @@ const App = () => {
           
           {/* Onboarding route - requires auth but not profile completion */}
           <Route path="/onboarding" element={
-            <AuthGuard>
+            <AuthGuard requireProfileComplete={false}>
               <Onboarding />
             </AuthGuard>
           } />

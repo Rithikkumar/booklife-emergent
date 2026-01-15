@@ -50,7 +50,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('user_id', user.id)
         .maybeSingle();
       
-      const isComplete = !error && !!(profile?.username && profile?.display_name);
+      // Profile is complete only if it exists AND has non-empty username AND display_name
+      const isComplete = !error && !!(profile?.username?.trim() && profile?.display_name?.trim());
       setProfileComplete(isComplete);
       return isComplete;
     } catch {
@@ -76,7 +77,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .eq('user_id', session.user.id)
               .maybeSingle();
             
-            setProfileComplete(!error && !!(profile?.username && profile?.display_name));
+            // Profile is complete only if it exists AND has non-empty username AND display_name
+            setProfileComplete(!error && !!(profile?.username?.trim() && profile?.display_name?.trim()));
           }, 0);
         } else {
           setProfileComplete(false);
@@ -96,7 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .eq('user_id', session.user.id)
           .maybeSingle();
         
-        setProfileComplete(!error && !!(profile?.username && profile?.display_name));
+        // Profile is complete only if it exists AND has non-empty username AND display_name
+        setProfileComplete(!error && !!(profile?.username?.trim() && profile?.display_name?.trim()));
       }
       
       setIsLoading(false);

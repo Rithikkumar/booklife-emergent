@@ -120,9 +120,23 @@ const Auth: React.FC = () => {
         sessionStorage.removeItem('ephemeral_session');
       }
 
-      toast({ title: "Welcome back!", description: "You have successfully signed in." });
-      const from = (location.state as { from?: string })?.from || '/explore';
-      navigate(from, { replace: true });
+      // Check if user's profile is complete
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, display_name')
+        .eq('user_id', data.user.id)
+        .single();
+      
+      if (!profile?.username || !profile?.display_name) {
+        // Profile incomplete - redirect to onboarding
+        toast({ title: "Welcome!", description: "Let's complete your profile setup." });
+        navigate('/onboarding', { replace: true });
+      } else {
+        // Profile complete - proceed to destination
+        toast({ title: "Welcome back!", description: "You have successfully signed in." });
+        const from = (location.state as { from?: string })?.from || '/explore';
+        navigate(from, { replace: true });
+      }
     } catch (error) {
       showErrorToast(handleAuthError(error));
     } finally {

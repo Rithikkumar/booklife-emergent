@@ -44,13 +44,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) return false;
     
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('username, display_name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      const isComplete = !!(profile?.username && profile?.display_name);
+      const isComplete = !error && !!(profile?.username && profile?.display_name);
       setProfileComplete(isComplete);
       return isComplete;
     } catch {
@@ -70,13 +70,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (session?.user) {
           // Use setTimeout to avoid Supabase auth deadlock
           setTimeout(async () => {
-            const { data: profile } = await supabase
+            const { data: profile, error } = await supabase
               .from('profiles')
               .select('username, display_name')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
             
-            setProfileComplete(!!(profile?.username && profile?.display_name));
+            setProfileComplete(!error && !!(profile?.username && profile?.display_name));
           }, 0);
         } else {
           setProfileComplete(false);
@@ -90,13 +90,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('username, display_name')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
         
-        setProfileComplete(!!(profile?.username && profile?.display_name));
+        setProfileComplete(!error && !!(profile?.username && profile?.display_name));
       }
       
       setIsLoading(false);

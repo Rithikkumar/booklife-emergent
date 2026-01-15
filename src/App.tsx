@@ -28,6 +28,7 @@ import AdminSecurity from "./pages/AdminSecurity";
 import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import Onboarding from "./pages/Onboarding";
 import Messages from "./pages/Messages";
 import MessageThread from "./pages/MessageThread";
 import ScanBook from "./pages/ScanBook";
@@ -78,6 +79,13 @@ const App = () => {
             </AuthGuard>
           } />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          
+          {/* Onboarding route - requires auth but not profile completion */}
+          <Route path="/onboarding" element={
+            <AuthGuard>
+              <Onboarding />
+            </AuthGuard>
+          } />
           
           {/* Scan route - handles QR code scans, manages its own auth redirect */}
           <Route path="/scan/:code" element={<ScanBook />} />

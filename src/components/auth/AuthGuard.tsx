@@ -8,15 +8,17 @@ interface AuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   redirectTo?: string;
+  requireProfileComplete?: boolean;
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ 
   children, 
   requireAuth = true,
-  redirectTo = '/auth'
+  redirectTo = '/auth',
+  requireProfileComplete = true
 }) => {
   // Use global auth state from AuthContext - no local state duplication
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, profileComplete } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 

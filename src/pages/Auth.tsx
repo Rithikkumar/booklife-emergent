@@ -129,13 +129,14 @@ const Auth: React.FC = () => {
       }
 
       // Check if user's profile is complete
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('username, display_name')
         .eq('user_id', data.user.id)
-        .single();
+        .maybeSingle();
       
-      if (!profile?.username || !profile?.display_name) {
+      // If no profile exists OR profile fields are empty, redirect to onboarding
+      if (profileError || !profile || !profile.username || !profile.display_name) {
         // Profile incomplete - redirect to onboarding
         toast({ title: "Welcome!", description: "Let's complete your profile setup." });
         navigate('/onboarding', { replace: true });

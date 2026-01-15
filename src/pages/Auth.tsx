@@ -64,10 +64,28 @@ const Auth: React.FC = () => {
   }, [location.search]);
 
   useEffect(() => {
-    if (user) {
-      navigate('/explore', { replace: true });
-    }
-  }, [user, navigate]);
+    const checkAndRedirect = async () => {
+      if (user) {
+        // Check if profile is complete before redirecting
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, display_name')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (!profile?.username || !profile?.display_name) {
+          // Profile incomplete - redirect to onboarding
+          navigate('/onboarding', { replace: true });
+        } else {
+          // Profile complete - proceed to destination
+          const from = (location.state as { from?: string })?.from || '/explore';
+          navigate(from, { replace: true });
+        }
+      }
+    };
+    
+    checkAndRedirect();
+  }, [user, navigate, location.state]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

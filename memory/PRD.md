@@ -75,9 +75,14 @@ Implemented a comprehensive 4-step onboarding wizard for new users:
 
 1. **Step 1 - Username:**
    - @ prefix display
-   - Validation: 3-30 chars, alphanumeric + underscore only
+   - **Auto-lowercase conversion** - All input automatically converted to lowercase
+   - Validation: 3-30 chars, lowercase letters, numbers + underscore only
    - Debounced uniqueness check against Supabase
-   - Real-time availability indicator (✓/✕)
+   - **Enhanced visual feedback:**
+     - Green checkmark in circle + green border when available
+     - Red X in circle + red border when taken
+     - Loading spinner while checking
+     - Status messages with colored dots
 
 2. **Step 2 - Profile Setup:**
    - Display name input (min 2 chars)

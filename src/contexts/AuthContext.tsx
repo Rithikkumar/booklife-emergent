@@ -8,6 +8,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   userId: string | null;
+  profileComplete: boolean;
+  checkProfileComplete: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +18,8 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   userId: null,
+  profileComplete: false,
+  checkProfileComplete: async () => false,
 });
 
 export const useAuth = () => {
@@ -34,21 +38,67 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [profileComplete, setProfileComplete] = useState(false);
+
+  const checkProfileComplete = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, display_name')
+        .eq('user_id', user.id)
+        .single();
+      
+      const isComplete = !!(profile?.username && profile?.display_name);
+      setProfileComplete(isComplete);
+      return isComplete;
+    } catch {
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        
+        // Check profile completion when user logs in
+        if (session?.user) {
+          // Use setTimeout to avoid Supabase auth deadlock
+          setTimeout(async () => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username, display_name')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            setProfileComplete(!!(profile?.username && profile?.display_name));
+          }, 0);
+        } else {
+          setProfileComplete(false);
+        }
       }
     );
 
     // THEN check for existing session (synchronous from localStorage cache)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, display_name')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        setProfileComplete(!!(profile?.username && profile?.display_name));
+      }
+      
       setIsLoading(false);
     });
 
@@ -61,6 +111,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLoading,
     userId: user?.id ?? null,
+    profileComplete,
+    checkProfileComplete,
   };
 
   return (

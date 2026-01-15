@@ -62,15 +62,21 @@ const Onboarding: React.FC = () => {
     const checkExistingProfile = async () => {
       if (!user) return;
       
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('username, display_name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (profile?.username && profile?.display_name) {
+      logger.debug('[Onboarding] Profile check result:', { profile, error, userId: user.id });
+      
+      // Only redirect if profile exists AND has BOTH username AND display_name filled in
+      if (!error && profile && profile.username && profile.username.trim() !== '' && profile.display_name && profile.display_name.trim() !== '') {
         // Profile already complete, redirect
+        logger.debug('[Onboarding] Profile complete, redirecting to explore');
         navigate('/explore', { replace: true });
+      } else {
+        logger.debug('[Onboarding] Profile incomplete, staying on onboarding');
       }
     };
     

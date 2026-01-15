@@ -567,12 +567,13 @@ const Onboarding: React.FC = () => {
             {renderStep()}
           </AnimatePresence>
 
-          <div className="flex items-center justify-between mt-8 pt-4 border-t">
+          <div className="flex items-center justify-between mt-8 pt-4 border-t" data-testid="onboarding-navigation">
             <Button
               variant="ghost"
               onClick={prevStep}
               disabled={currentStep === 1 || isLoading}
               className="gap-2"
+              data-testid="onboarding-back-btn"
             >
               <ChevronLeft className="h-4 w-4" />
               Back

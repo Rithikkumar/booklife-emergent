@@ -309,24 +309,42 @@ const Onboarding: React.FC = () => {
                   value={data.username}
                   onChange={(e) => setData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
                   placeholder="your_username"
-                  className="pl-8 pr-10"
+                  className={`pl-8 pr-10 lowercase ${
+                    usernameAvailable === true ? 'border-green-500 focus-visible:ring-green-500' : 
+                    usernameAvailable === false ? 'border-destructive focus-visible:ring-destructive' : ''
+                  }`}
                   maxLength={30}
                   autoFocus
+                  autoComplete="off"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isCheckingUsername && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" data-testid="username-checking-spinner" />}
-                  {!isCheckingUsername && usernameAvailable === true && <Check className="h-4 w-4 text-green-500" data-testid="username-available-check" />}
-                  {!isCheckingUsername && usernameAvailable === false && <span className="text-destructive text-xs" data-testid="username-unavailable-x">✕</span>}
+                  {isCheckingUsername && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" data-testid="username-checking-spinner" />}
+                  {!isCheckingUsername && usernameAvailable === true && (
+                    <div className="flex items-center justify-center h-5 w-5 rounded-full bg-green-500" data-testid="username-available-check">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                  {!isCheckingUsername && usernameAvailable === false && (
+                    <div className="flex items-center justify-center h-5 w-5 rounded-full bg-destructive" data-testid="username-unavailable-x">
+                      <span className="text-white text-xs font-bold">✕</span>
+                    </div>
+                  )}
                 </div>
               </div>
               {usernameError && (
-                <p className="text-sm text-destructive" data-testid="username-error">{usernameError}</p>
+                <p className="text-sm text-destructive flex items-center gap-1" data-testid="username-error">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive"></span>
+                  {usernameError}
+                </p>
               )}
               {usernameAvailable && !usernameError && (
-                <p className="text-sm text-green-600" data-testid="username-available-message">Username is available!</p>
+                <p className="text-sm text-green-600 flex items-center gap-1" data-testid="username-available-message">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                  Username is available!
+                </p>
               )}
               <p className="text-xs text-muted-foreground">
-                3-30 characters. Letters, numbers, and underscores only.
+                3-30 characters. Lowercase letters, numbers, and underscores only.
               </p>
             </div>
           </motion.div>

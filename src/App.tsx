@@ -29,6 +29,7 @@ import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import Onboarding from "./pages/Onboarding";
+import OnboardingTest from "./pages/OnboardingTest";
 import Messages from "./pages/Messages";
 import MessageThread from "./pages/MessageThread";
 import ScanBook from "./pages/ScanBook";

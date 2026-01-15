@@ -50,13 +50,14 @@ const AuthCallback: React.FC = () => {
         if (session) {
           setStatus('Checking profile...');
           // Check if profile is complete
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('username, display_name')
             .eq('user_id', session.user.id)
-            .single();
+            .maybeSingle();
           
-          if (!profile?.username || !profile?.display_name) {
+          // If no profile exists OR profile fields are empty, redirect to onboarding
+          if (profileError || !profile || !profile.username || !profile.display_name) {
             // Profile incomplete - redirect to onboarding
             logger.debug('[AuthCallback] Profile incomplete, redirecting to onboarding');
             navigate('/onboarding', { replace: true });

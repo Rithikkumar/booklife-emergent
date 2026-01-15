@@ -355,6 +355,7 @@ const Onboarding: React.FC = () => {
                 <Label htmlFor="displayName">Display Name</Label>
                 <Input
                   id="displayName"
+                  data-testid="onboarding-displayname-input"
                   value={data.displayName}
                   onChange={(e) => setData(prev => ({ ...prev, displayName: e.target.value }))}
                   placeholder="Your Name"
@@ -370,6 +371,7 @@ const Onboarding: React.FC = () => {
                 <div 
                   className="relative cursor-pointer group"
                   onClick={() => fileInputRef.current?.click()}
+                  data-testid="onboarding-avatar-upload"
                 >
                   <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
                     <AvatarImage src={data.profilePicture || undefined} />
@@ -390,6 +392,7 @@ const Onboarding: React.FC = () => {
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="hidden"
+                  data-testid="onboarding-file-input"
                 />
               </div>
               <p className="text-center text-xs text-muted-foreground">

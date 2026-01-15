@@ -81,8 +81,12 @@ const Auth: React.FC = () => {
           .eq('user_id', user.id)
           .maybeSingle();
         
-        // If no profile exists OR profile fields are empty, redirect to onboarding
-        if (profileError || !profile || !profile.username || !profile.display_name) {
+        // Profile is complete only if it exists AND has non-empty username AND display_name
+        const hasCompleteProfile = !profileError && profile && 
+          profile.username && profile.username.trim() !== '' && 
+          profile.display_name && profile.display_name.trim() !== '';
+        
+        if (!hasCompleteProfile) {
           // Profile incomplete - redirect to onboarding
           navigate('/onboarding', { replace: true });
         } else {

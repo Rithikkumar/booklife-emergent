@@ -583,6 +583,7 @@ const Onboarding: React.FC = () => {
                 onClick={nextStep}
                 disabled={!canProceed() || isLoading}
                 className="gap-2"
+                data-testid="onboarding-next-btn"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -592,6 +593,7 @@ const Onboarding: React.FC = () => {
                 onClick={handleComplete}
                 disabled={isLoading}
                 className="gap-2"
+                data-testid="onboarding-complete-btn"
               >
                 {isLoading ? (
                   <>

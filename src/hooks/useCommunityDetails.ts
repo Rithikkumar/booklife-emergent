@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Community } from '@/types';
 import { useCommunityAnalytics } from './useCommunityAnalytics';
-import { useTrackInteraction } from './useCommunityGrowth';
 import { logger } from '@/utils/logger';
 
 export interface CommunityDetails extends Community {
@@ -14,6 +13,7 @@ export interface CommunityDetails extends Community {
   isMember: boolean;
   is_public: boolean;
   restrict_messaging: boolean;
+  guidelines?: string;
 }
 
 export const useCommunityDetails = (communityId?: string) => {
@@ -24,7 +24,6 @@ export const useCommunityDetails = (communityId?: string) => {
   const [joinRequestStatus, setJoinRequestStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
   const { toast } = useToast();
   const { analytics, refreshAnalytics } = useCommunityAnalytics(communityId);
-  const { trackInteraction } = useTrackInteraction();
 
   const fetchCommunityDetails = useCallback(async (forceUpdate = false) => {
     if (!communityId) return;
@@ -122,9 +121,6 @@ export const useCommunityDetails = (communityId?: string) => {
 
       setCommunity(newCommunity);
 
-      // Track community view for analytics and recommendations
-      trackInteraction(communityId, 'view');
-
     } catch (error) {
       logger.error('Error fetching community details:', error);
       toast({
@@ -135,7 +131,7 @@ export const useCommunityDetails = (communityId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [communityId, toast, analytics, trackInteraction]);
+  }, [communityId, toast, analytics]);
 
   const refreshMembershipStatus = useCallback(async () => {
     if (!communityId) return;
@@ -257,9 +253,6 @@ export const useCommunityDetails = (communityId?: string) => {
             title: "Joined Community",
             description: `Welcome to ${community.name}!`,
           });
-          
-          // Track join action for recommendations
-          trackInteraction(communityId, 'join');
         }
 
         // Refresh community details and analytics immediately
@@ -284,7 +277,7 @@ export const useCommunityDetails = (communityId?: string) => {
         setJoining(false);
       }
     }
-  }, [communityId, community, joinRequestStatus, fetchCommunityDetails, refreshAnalytics, trackInteraction, toast]);
+  }, [communityId, community, joinRequestStatus, fetchCommunityDetails, refreshAnalytics, toast]);
 
   const confirmLeaveCommunity = useCallback(async () => {
     if (!communityId || !community) return;
@@ -319,9 +312,6 @@ export const useCommunityDetails = (communityId?: string) => {
         description: `You've left ${community.name}`,
       });
 
-      // Track leave action for recommendations
-      trackInteraction(communityId, 'leave');
-
       // Refresh community details and analytics immediately
       await Promise.all([
         refreshMembershipStatus(),
@@ -343,7 +333,7 @@ export const useCommunityDetails = (communityId?: string) => {
     } finally {
       setJoining(false);
     }
-  }, [communityId, community, fetchCommunityDetails, trackInteraction, toast]);
+  }, [communityId, community, fetchCommunityDetails, toast]);
 
   // Initial load and setup real-time subscriptions
   useEffect(() => {
@@ -393,8 +383,11 @@ export const useCommunityDetails = (communityId?: string) => {
   }, [communityId, fetchCommunityDetails, refreshMembershipStatus, refreshAnalytics]);
 
   // Update community data when analytics change (but don't wait for them to load initially)
+  // Use a ref to prevent infinite loops - only update when analytics object identity changes
+  const analyticsRef = React.useRef(analytics);
   useEffect(() => {
-    if (analytics && community) {
+    if (analytics && analytics !== analyticsRef.current) {
+      analyticsRef.current = analytics;
       setCommunity(prev => prev ? {
         ...prev,
         members: analytics.memberCount || prev.members,
@@ -403,7 +396,7 @@ export const useCommunityDetails = (communityId?: string) => {
         recentActivity: analytics.lastActivity ? new Date(analytics.lastActivity).toLocaleDateString() : prev.recentActivity,
       } : null);
     }
-  }, [analytics, community]);
+  }, [analytics]);
 
   return {
     community,

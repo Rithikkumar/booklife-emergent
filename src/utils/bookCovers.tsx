@@ -10,25 +10,63 @@ import {
   isAllowedImageUrl,
 } from './apiValidation';
 
-// Cache for successful cover lookups (in-memory, clears on page refresh)
-const coverCache = new Map<string, string>();
+// Persistent cache using localStorage + in-memory fallback
+const CACHE_KEY_PREFIX = 'bookcover_';
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-// Cache for failed lookups to avoid repeated API calls
+const memoryCache = new Map<string, string>();
 const failedCache = new Set<string>();
+
+const getCachedCover = (cacheKey: string): string | null => {
+  // Check memory first
+  if (memoryCache.has(cacheKey)) return memoryCache.get(cacheKey)!;
+  
+  // Check localStorage
+  try {
+    const stored = localStorage.getItem(CACHE_KEY_PREFIX + cacheKey);
+    if (stored) {
+      const { url, ts } = JSON.parse(stored);
+      if (Date.now() - ts < CACHE_TTL_MS) {
+        memoryCache.set(cacheKey, url);
+        return url;
+      }
+      localStorage.removeItem(CACHE_KEY_PREFIX + cacheKey);
+    }
+  } catch {
+    // localStorage unavailable
+  }
+  return null;
+};
+
+const setCachedCover = (cacheKey: string, url: string) => {
+  memoryCache.set(cacheKey, url);
+  try {
+    localStorage.setItem(CACHE_KEY_PREFIX + cacheKey, JSON.stringify({ url, ts: Date.now() }));
+  } catch {
+    // quota exceeded - clear old entries
+    try {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_KEY_PREFIX));
+      keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => localStorage.removeItem(k));
+      localStorage.setItem(CACHE_KEY_PREFIX + cacheKey, JSON.stringify({ url, ts: Date.now() }));
+    } catch { /* give up */ }
+  }
+};
 
 // Function to clear cache for a specific book or all books
 export const clearCoverCache = (title?: string, author?: string) => {
   if (title) {
-    // Clear specific book cache for all sizes
     ['S', 'M', 'L'].forEach(size => {
       const cacheKey = `${title.toLowerCase()}-${author?.toLowerCase() || ''}-${size}`;
-      coverCache.delete(cacheKey);
+      memoryCache.delete(cacheKey);
       failedCache.delete(cacheKey);
+      try { localStorage.removeItem(CACHE_KEY_PREFIX + cacheKey); } catch {}
     });
   } else {
-    // Clear all cache
-    coverCache.clear();
+    memoryCache.clear();
     failedCache.clear();
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith(CACHE_KEY_PREFIX)).forEach(k => localStorage.removeItem(k));
+    } catch {}
   }
 };
 
@@ -53,6 +91,26 @@ const getTitleVariations = (title: string): string[] => {
   }
   
   return variations;
+};
+
+/**
+ * Check if a title match is strong enough to be confident
+ */
+const isTitleMatch = (bookTitle: string, searchTitle: string): boolean => {
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalizedBook = normalize(bookTitle);
+  const normalizedSearch = normalize(searchTitle);
+  
+  // Exact match after normalization
+  if (normalizedBook === normalizedSearch) return true;
+  
+  // For very short titles (like "1984", "It"), require exact normalized match
+  if (normalizedSearch.length <= 5) {
+    return normalizedBook === normalizedSearch;
+  }
+  
+  // For longer titles, allow containment
+  return normalizedBook.includes(normalizedSearch) || normalizedSearch.includes(normalizedBook);
 };
 
 /**
@@ -84,12 +142,8 @@ const tryOpenLibrary = async (title: string, author?: string, size: 'S' | 'M' | 
             if (!authorMatch) continue;
           }
           
-          // Verify title matches (case-insensitive, allowing partial matches)
-          const bookTitleLower = book.title.toLowerCase();
-          const searchTitleLower = titleVariation.toLowerCase();
-          const titleMatch = bookTitleLower.includes(searchTitleLower) ||
-                            searchTitleLower.includes(bookTitleLower);
-          if (!titleMatch) continue;
+          // Verify title matches using strict matching
+          if (!isTitleMatch(book.title, titleVariation)) continue;
           
           // Try cover_i first (most reliable)
           if (book.cover_i) {
@@ -133,6 +187,10 @@ const tryGoogleBooks = async (title: string, author?: string): Promise<string | 
     
     if (data.items && data.items.length > 0) {
       for (const item of data.items) {
+        // Verify title match before using cover
+        const volumeTitle = item.volumeInfo?.title;
+        if (volumeTitle && !isTitleMatch(volumeTitle, title)) continue;
+        
         const imageLinks = item.volumeInfo?.imageLinks;
         if (imageLinks) {
           // Try different sizes in order of preference
@@ -183,10 +241,9 @@ export const getBookCover = async (
   // Create cache key
   const cacheKey = `${title.toLowerCase().trim()}-${author?.toLowerCase().trim() || ''}-${size}`;
   
-  // Check success cache first
-  if (coverCache.has(cacheKey)) {
-    return coverCache.get(cacheKey)!;
-  }
+  // Check success cache first (memory + localStorage)
+  const cached = getCachedCover(cacheKey);
+  if (cached) return cached;
   
   // Check failed cache to avoid repeated failed API calls
   if (failedCache.has(cacheKey)) {
@@ -197,14 +254,14 @@ export const getBookCover = async (
     // 1. Try Open Library first (free, no API key needed)
     const openLibraryResult = await tryOpenLibrary(title, author, size);
     if (openLibraryResult) {
-      coverCache.set(cacheKey, openLibraryResult);
+      setCachedCover(cacheKey, openLibraryResult);
       return openLibraryResult;
     }
     
     // 2. Try Google Books as fallback (free, no API key needed for basic usage)
     const googleBooksResult = await tryGoogleBooks(title, author);
     if (googleBooksResult) {
-      coverCache.set(cacheKey, googleBooksResult);
+      setCachedCover(cacheKey, googleBooksResult);
       return googleBooksResult;
     }
     
@@ -226,12 +283,21 @@ export const BookCover: React.FC<{
   size?: 'S' | 'M' | 'L';
   className?: string;
   fallbackClassName?: string;
-}> = ({ title, author, size = 'M', className = '', fallbackClassName = '' }) => {
-  const [coverUrl, setCoverUrl] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  coverUrl?: string | null;
+}> = ({ title, author, size = 'M', className = '', fallbackClassName = '', coverUrl: initialCoverUrl }) => {
+  const [coverUrl, setCoverUrl] = React.useState<string | null>(initialCoverUrl || null);
+  const [loading, setLoading] = React.useState(!initialCoverUrl);
   const [error, setError] = React.useState(false);
 
   React.useEffect(() => {
+    // If we already have a cover URL from props, use it directly
+    if (initialCoverUrl) {
+      setCoverUrl(initialCoverUrl);
+      setLoading(false);
+      setError(false);
+      return;
+    }
+
     let mounted = true;
     
     const fetchCover = async () => {
@@ -260,7 +326,7 @@ export const BookCover: React.FC<{
     return () => {
       mounted = false;
     };
-  }, [title, author, size]);
+  }, [title, author, size, initialCoverUrl]);
 
   // Loading state
   if (loading) {

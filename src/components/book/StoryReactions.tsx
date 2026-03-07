@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { logger } from '@/utils/logger';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Reaction {
   id: string;
@@ -39,12 +40,13 @@ const reactionLabels = {
 };
 
 const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
+  const { userId: currentUserId } = useAuth();
   const [reactions, setReactions] = useState<ReactionCount[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchReactions();
-  }, [bookId]);
+  }, [bookId, currentUserId]);
 
   const fetchReactions = async () => {
     try {
@@ -54,9 +56,6 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
         .eq('book_id', bookId);
 
       if (error) throw error;
-
-      const { data: { user } } = await supabase.auth.getUser();
-      const currentUserId = user?.id;
 
       // Count reactions by type
       const reactionCounts = Object.keys(reactionIcons).map(type => {
@@ -75,8 +74,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
   };
 
   const handleReaction = async (reactionType: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!currentUserId) {
       toast.error('Please sign in to react to stories');
       return;
     }
@@ -93,7 +91,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
           .from('book_story_reactions')
           .delete()
           .eq('book_id', bookId)
-          .eq('user_id', user.id);
+          .eq('user_id', currentUserId);
 
         if (error) throw error;
       } else {
@@ -103,7 +101,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
             .from('book_story_reactions')
             .delete()
             .eq('book_id', bookId)
-            .eq('user_id', user.id);
+            .eq('user_id', currentUserId);
         }
         
         // Then add the new reaction
@@ -111,7 +109,7 @@ const StoryReactions: React.FC<StoryReactionsProps> = ({ bookId }) => {
           .from('book_story_reactions')
           .insert({
             book_id: bookId,
-            user_id: user.id,
+            user_id: currentUserId,
             reaction_type: reactionType,
           });
 

@@ -230,6 +230,7 @@ const BookDetails: React.FC = () => {
                   <BookCover 
                     title={book.title}
                     author={book.author}
+                    coverUrl={book.cover_url}
                     size="L"
                     className="w-full h-full"
                   />

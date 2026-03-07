@@ -97,6 +97,7 @@ const GoogleBooksImageLinksSchema = z.object({
 
 const GoogleBooksVolumeSchema = z.object({
   volumeInfo: z.object({
+    title: z.string().optional(),
     imageLinks: GoogleBooksImageLinksSchema,
   }).optional(),
 });

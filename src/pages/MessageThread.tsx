@@ -1,55 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navigation from '@/components/ui/navigation';
-import MessageThreadContent from '@/components/messages/MessageThreadContent';
 
+/**
+ * Legacy route handler: redirects /messages/:conversationId to /messages?room=:id
+ * This ensures old links/bookmarks still work after the messaging system migration.
+ */
 const MessageThread: React.FC = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Desktop: redirect to split view with query param
-  useEffect(() => {
-    if (!isMobile && conversationId) {
-      navigate(`/messages?conversation=${conversationId}`, { replace: true });
+    if (conversationId) {
+      // Redirect to the unified messages page with room query param
+      navigate(`/messages?room=${conversationId}`, { replace: true });
+    } else {
+      navigate('/messages', { replace: true });
     }
-  }, [conversationId, isMobile, navigate]);
-
-  // Mobile: show full screen thread
-  if (!isMobile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Redirecting...</p>
-      </div>
-    );
-  }
-
-  if (!conversationId) {
-    navigate('/messages');
-    return null;
-  }
+  }, [conversationId, navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="pt-20 pb-4 px-4 h-screen">
-        <div className="h-[calc(100vh-100px)]">
-          <MessageThreadContent
-            conversationId={conversationId}
-            showBackButton={true}
-            onBack={() => navigate('/messages')}
-          />
-        </div>
-      </div>
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <p className="text-muted-foreground">Redirecting...</p>
     </div>
   );
 };

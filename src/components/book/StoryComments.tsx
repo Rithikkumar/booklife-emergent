@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { Send, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,24 +27,18 @@ interface StoryCommentsProps {
 }
 
 const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds }) => {
+  const { userId: currentUserId } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   // Check if current user is allowed to comment (must be a book owner)
   const canComment = currentUserId && (!allowedUserIds || allowedUserIds.length === 0 || allowedUserIds.includes(currentUserId));
 
   useEffect(() => {
     fetchComments();
-    getCurrentUser();
   }, [bookId]);
-
-  const getCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUserId(user?.id || null);
-  };
 
   const fetchComments = async () => {
     setLoading(true);
@@ -91,8 +86,7 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds })
     
     if (!newComment.trim()) return;
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!currentUserId) {
       toast.error('Please sign in to comment');
       return;
     }
@@ -103,7 +97,7 @@ const StoryComments: React.FC<StoryCommentsProps> = ({ bookId, allowedUserIds })
         .from('book_story_comments')
         .insert({
           book_id: bookId,
-          commenter_id: user.id,
+          commenter_id: currentUserId,
           comment: newComment.trim(),
         });
 

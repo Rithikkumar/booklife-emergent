@@ -14,6 +14,7 @@ import {
   MessageSquare,
   TrendingUp,
   Globe,
+  Lock,
   Settings,
   ChevronDown,
   ChevronUp
@@ -154,9 +155,9 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
                       Owner
                     </Badge>
                   )}
-                  <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20 text-xs">
-                    <Globe className="h-3 w-3 mr-1" />
-                    Public
+                  <Badge variant="outline" className={`text-xs ${community.is_public ? 'bg-green-500/10 text-green-700 border-green-500/20' : 'bg-orange-500/10 text-orange-700 border-orange-500/20'}`}>
+                    {community.is_public ? <Globe className="h-3 w-3 mr-1" /> : <Lock className="h-3 w-3 mr-1" />}
+                    {community.is_public ? 'Public' : 'Private'}
                   </Badge>
                 </div>
 
@@ -226,9 +227,9 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
                       Owner
                     </Badge>
                   )}
-                  <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">
-                    <Globe className="h-3 w-3 mr-1" />
-                    Public
+                  <Badge variant="outline" className={`${community.is_public ? 'bg-green-500/10 text-green-700 border-green-500/20' : 'bg-orange-500/10 text-orange-700 border-orange-500/20'}`}>
+                    {community.is_public ? <Globe className="h-3 w-3 mr-1" /> : <Lock className="h-3 w-3 mr-1" />}
+                    {community.is_public ? 'Public' : 'Private'}
                   </Badge>
                 </div>
 

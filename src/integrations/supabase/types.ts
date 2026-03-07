@@ -81,7 +81,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_book_classes_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       book_codes: {
         Row: {
@@ -117,7 +125,79 @@ export type Database = {
           id?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_book_codes_claimed_by"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_book_codes_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      book_passes: {
+        Row: {
+          book_code: string
+          created_at: string | null
+          from_user_id: string | null
+          id: string
+          latitude: number | null
+          location_city: string | null
+          location_country: string | null
+          longitude: number | null
+          note: string | null
+          passed_at: string | null
+          to_user_id: string
+        }
+        Insert: {
+          book_code: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          latitude?: number | null
+          location_city?: string | null
+          location_country?: string | null
+          longitude?: number | null
+          note?: string | null
+          passed_at?: string | null
+          to_user_id: string
+        }
+        Update: {
+          book_code?: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          latitude?: number | null
+          location_city?: string | null
+          location_country?: string | null
+          longitude?: number | null
+          note?: string | null
+          passed_at?: string | null
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_passes_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "book_passes_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       book_story_comments: {
         Row: {
@@ -144,7 +224,22 @@ export type Database = {
           id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_book_story_comments_book"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "user_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_book_story_comments_commenter"
+            columns: ["commenter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       book_story_reactions: {
         Row: {
@@ -168,7 +263,22 @@ export type Database = {
           reaction_type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_book_story_reactions_book"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "user_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_book_story_reactions_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -225,6 +335,13 @@ export type Database = {
             referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_chat_messages_sender"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       chat_room_members: {
@@ -262,6 +379,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_chat_room_members_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -302,7 +426,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_chat_rooms_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       class_chat_messages: {
         Row: {
@@ -336,6 +468,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "book_classes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_class_chat_messages_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -410,6 +549,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "book_classes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_class_participants_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -498,7 +644,22 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_community_join_requests_community"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_join_requests_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       community_members: {
         Row: {
@@ -654,7 +815,22 @@ export type Database = {
           score?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_community_recommendations_community"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_recommendations_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       community_typing_indicators: {
         Row: {
@@ -720,7 +896,22 @@ export type Database = {
           participant_2_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_conversations_participant_1"
+            columns: ["participant_1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_conversations_participant_2"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       credential_access_log: {
         Row: {
@@ -759,7 +950,15 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_credential_access_log_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       direct_messages: {
         Row: {
@@ -816,6 +1015,13 @@ export type Database = {
             referencedRelation: "direct_messages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_direct_messages_sender"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       email_notifications: {
@@ -857,6 +1063,13 @@ export type Database = {
             referencedRelation: "book_classes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_email_notifications_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       followed_books: {
@@ -887,7 +1100,15 @@ export type Database = {
           notification_enabled?: boolean
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_followed_books_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       followers: {
         Row: {
@@ -908,7 +1129,22 @@ export type Database = {
           following_id?: string
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_followers_follower"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_followers_following"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -941,7 +1177,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_notifications_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1029,11 +1273,15 @@ export type Database = {
           genre: string | null
           id: string
           is_edited: boolean | null
+          last_passed_at: string | null
           latitude: number | null
           longitude: number | null
           neighborhood: string | null
           notes: string | null
+          original_owner_id: string | null
+          pass_count: number | null
           previous_owner: string | null
+          status: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -1052,11 +1300,15 @@ export type Database = {
           genre?: string | null
           id?: string
           is_edited?: boolean | null
+          last_passed_at?: string | null
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
           notes?: string | null
+          original_owner_id?: string | null
+          pass_count?: number | null
           previous_owner?: string | null
+          status?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -1075,17 +1327,36 @@ export type Database = {
           genre?: string | null
           id?: string
           is_edited?: boolean | null
+          last_passed_at?: string | null
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
           notes?: string | null
+          original_owner_id?: string | null
+          pass_count?: number | null
           previous_owner?: string | null
+          status?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_books_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_books_original_owner_id_fkey"
+            columns: ["original_owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_community_interactions: {
         Row: {
@@ -1115,7 +1386,22 @@ export type Database = {
           user_id?: string
           weight?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_community_interactions_community"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_user_community_interactions_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1358,6 +1644,19 @@ export type Database = {
         Args: { p_community_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_community_member: {
+        Args: { p_community_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_follower_of: {
+        Args: { p_follower_id: string; p_following_id: string }
+        Returns: boolean
+      }
+      is_public_community: {
+        Args: { p_community_id: string }
+        Returns: boolean
+      }
+      is_public_profile: { Args: { p_user_id: string }; Returns: boolean }
       is_user_class_participant: {
         Args: { class_id_param: string; user_id_param: string }
         Returns: boolean

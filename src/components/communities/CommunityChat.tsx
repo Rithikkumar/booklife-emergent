@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,9 +39,9 @@ interface CommunityChatProps {
 }
 
 const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityName }) => {
+  const { userId: currentUserId } = useAuth();
   const [message, setMessage] = useState('');
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const {
@@ -67,14 +68,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({ communityId, communityNam
     restrictMessaging
   } = useMessagingPermissions(communityId);
 
-  // Get current user
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    getCurrentUser();
-  }, []);
+  // currentUserId is now from useAuth() - no async fetch needed
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {

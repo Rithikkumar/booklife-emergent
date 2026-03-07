@@ -15,10 +15,9 @@ import { calculateActivityLevel, formatLastActivity } from '@/utils/activityHelp
 
 interface CommunityActivityProps {
   community: CommunityDetails;
-  weeklyGrowth?: number; // New prop for real member growth
 }
 
-const CommunityActivity: React.FC<CommunityActivityProps> = ({ community, weeklyGrowth = 0 }) => {
+const CommunityActivity: React.FC<CommunityActivityProps> = ({ community }) => {
   const activityInfo = calculateActivityLevel(community.messageCount, community.members);
   
   const getActivityIcon = () => {
@@ -98,13 +97,11 @@ const CommunityActivity: React.FC<CommunityActivityProps> = ({ community, weekly
                 <span className="text-muted-foreground">Last message</span>
                 <span className="font-medium">{formatLastActivity(community.lastActivity)}</span>
               </div>
-              {weeklyGrowth > 0 && (
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                  <span className="text-muted-foreground">Community growing</span>
-                  <Badge variant="secondary" className="text-xs">+{weeklyGrowth} members this week</Badge>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <span className="text-muted-foreground">Total members</span>
+                <Badge variant="secondary" className="text-xs">{community.members.toLocaleString()} members</Badge>
+              </div>
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 bg-purple-500 rounded-full" />
                 <span className="text-muted-foreground">Engagement</span>
@@ -130,13 +127,11 @@ const CommunityActivity: React.FC<CommunityActivityProps> = ({ community, weekly
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {[
-              'Be respectful and kind to all members',
-              'Keep discussions relevant to community topics', 
-              'No spam, harassment, or inappropriate content',
-              'Help create a welcoming environment for everyone',
-              'Report any issues to community moderators'
-            ].map((guideline, index) => (
+            {(community.guidelines || 'Be respectful and kind to all members\nKeep discussions relevant to community topics\nNo spam, harassment, or inappropriate content\nHelp create a welcoming environment for everyone\nReport any issues to community moderators')
+              .split('\n')
+              .filter((line: string) => line.trim())
+              .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+              .map((guideline: string, index: number) => (
               <div key={index} className="flex items-start gap-2 text-sm">
                 <div className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0" />
                 <span className="text-muted-foreground">{guideline}</span>

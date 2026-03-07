@@ -37,7 +37,8 @@ export const useBookFiltering = () => {
     // Use real metrics from database
     const journeys = book.journeys || 1;
     const stories = book.stories || 0;
-    const recentActivity = Math.floor(Math.random() * 50) + 1; // This could be enhanced with real activity data
+    // Use a deterministic proxy for recent activity based on stories and journeys
+    const recentActivity = (journeys * 3) + (stories * 5);
     
     // Trending formula: (engagement metrics / age) with recency boost
     const baseScore = (journeys * 2 + stories * 3 + recentActivity * 1.5) / daysSinceCreated;
@@ -236,12 +237,7 @@ export const useBookFiltering = () => {
     }
   };
 
-  // Fetch all books when component mounts
-  useEffect(() => {
-    fetchBooks([], '');
-  }, []);
-
-  // Refetch when filters or search changes
+  // Single effect: fetch on mount and when filters/search change
   useEffect(() => {
     fetchBooks(activeFilters, searchQuery);
   }, [activeFilters, searchQuery]);

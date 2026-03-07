@@ -13,9 +13,11 @@ const Messages: React.FC = () => {
   const [showNewGroup, setShowNewGroup] = useState(false);
 
   // Extract roomId from URL query params for desktop view
-  const roomId = new URLSearchParams(location.search).get('room');
+  // Support both ?room= (new) and ?conversation= (legacy) params
+  const searchParams = new URLSearchParams(location.search);
+  const roomId = searchParams.get('room') || searchParams.get('conversation');
 
-  const handleSelectRoom = (id: string) => {
+  const handleSelectRoom = (id: string, _roomType?: 'direct' | 'group') => {
     navigate(`/messages?room=${id}`);
   };
 
@@ -113,7 +115,7 @@ const Messages: React.FC = () => {
             
             <ChatRoomList
               selectedRoomId={roomId || undefined}
-              onSelectRoom={(id) => navigate(`/messages/${id}`)}
+              onSelectRoom={(id) => navigate(`/messages?room=${id}`)}
               onNewChat={() => setShowNewChat(true)}
               onNewGroup={() => setShowNewGroup(true)}
               className="h-[calc(100%-60px)]"

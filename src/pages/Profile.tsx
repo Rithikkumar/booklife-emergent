@@ -146,16 +146,18 @@ const ProfilePage: React.FC = () => {
         setProfile(profileData);
 
         // Check if following
+        let isFollowingUser = false;
         if (user && user.id !== profileData.user_id) {
-          const { data: followData } = await supabase
+          const { data: followCheckData } = await supabase
             .from('followers')
             .select('*')
             .eq('follower_id', user.id)
             .eq('following_id', profileData.user_id)
             .single();
 
-          setIsFollowing(!!followData);
-          setFollowStatus({ status: followData ? 'following' : 'none' });
+          isFollowingUser = !!followCheckData;
+          setIsFollowing(isFollowingUser);
+          setFollowStatus({ status: followCheckData ? 'following' : 'none' });
         }
 
         // Fetch stats
@@ -171,10 +173,10 @@ const ProfilePage: React.FC = () => {
           books_count: booksCount.count || 0
         });
 
-        // Fetch books if not private or if following
+        // Fetch books if not private or if following (use local variable, not stale state)
         const canViewContent = !profileData.is_private || 
                               (user && user.id === profileData.user_id) || 
-                              isFollowing;
+                              isFollowingUser;
 
         if (canViewContent) {
           // Fetch books
@@ -202,7 +204,7 @@ const ProfilePage: React.FC = () => {
     };
 
     fetchData();
-  }, [username, isFollowing, navigate]);
+  }, [username, navigate]);
   
   
   const handleAvatarUploadClick = () => {
@@ -565,12 +567,11 @@ const ProfilePage: React.FC = () => {
                          onClick={async () => {
                            if (!currentUser || !profile) return;
                            try {
-                             const { data, error } = await supabase.rpc('get_or_create_conversation', {
-                               user1_id: currentUser.id,
-                               user2_id: profile.user_id
-                             });
-                             if (error) throw error;
-                             navigate(`/messages/${data}`);
+                             const { data, error } = await supabase.rpc('get_or_create_chat_room', {
+                                p_other_user_id: profile.user_id
+                              });
+                              if (error) throw error;
+                              navigate(`/messages?room=${data}`);
                            } catch (err) {
                              logger.error('Error starting conversation:', err);
                              toast.error('Failed to start conversation');
@@ -716,11 +717,12 @@ const ProfilePage: React.FC = () => {
                          >
                            <div className="relative w-full h-40 rounded-md mb-4 overflow-hidden">
                              <BookCover 
-                               title={book.title}
-                               author={book.author}
-                               size="M"
-                               className="w-full h-full"
-                             />
+                                title={book.title}
+                                author={book.author}
+                                coverUrl={book.cover_url}
+                                size="M"
+                                className="w-full h-full"
+                              />
                            </div>
                            
                             <h3 className="font-serif font-medium text-lg text-foreground mb-1 line-clamp-1">

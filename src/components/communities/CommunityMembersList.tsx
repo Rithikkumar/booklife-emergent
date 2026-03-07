@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ interface CommunityMembersListProps {
 }
 
 const CommunityMembersList: React.FC<CommunityMembersListProps> = ({ members, loading }) => {
+  const navigate = useNavigate();
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
@@ -100,7 +102,11 @@ const CommunityMembersList: React.FC<CommunityMembersListProps> = ({ members, lo
         <ScrollArea className="h-96 px-4">
           <div className="space-y-3 pb-4">
             {sortedMembers.map((member) => (
-              <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <div
+                key={member.id}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => member.profile?.username && navigate(`/profile/${member.profile.username}`)}
+              >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={member.profile?.profile_picture_url} />
                   <AvatarFallback className="text-xs">
@@ -110,7 +116,7 @@ const CommunityMembersList: React.FC<CommunityMembersListProps> = ({ members, lo
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-sm font-medium truncate hover:underline">
                       {getDisplayName(member)}
                     </p>
                     <Badge 

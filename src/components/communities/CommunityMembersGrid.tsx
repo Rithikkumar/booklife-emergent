@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ const CommunityMembersGrid: React.FC<CommunityMembersGridProps> = ({
   members, 
   loading 
 }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
@@ -170,7 +172,8 @@ const CommunityMembersGrid: React.FC<CommunityMembersGridProps> = ({
               {filteredMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group"
+                  className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+                  onClick={() => member.profile?.username && navigate(`/profile/${member.profile.username}`)}
                 >
                   <div className="flex items-start gap-3">
                     <Avatar className="h-10 w-10">
@@ -182,7 +185,7 @@ const CommunityMembersGrid: React.FC<CommunityMembersGridProps> = ({
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <p className="font-medium text-sm truncate">
+                        <p className="font-medium text-sm truncate group-hover:underline">
                           {getDisplayName(member)}
                         </p>
                         <Badge 

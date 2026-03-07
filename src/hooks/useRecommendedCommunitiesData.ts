@@ -128,7 +128,7 @@ export const useRecommendedCommunitiesData = () => {
           members: community.member_count,
           description: community.description,
           tags: community.tags || [],
-          recentActivity: 'today',
+          recentActivity: community.updated_at ? new Date(community.updated_at).toLocaleDateString() : 'No activity',
           isJoined: memberCommunityIds.has(community.id),
           createdBy: community.created_by,
           isCreatedByUser: userId === community.created_by,

@@ -107,7 +107,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  if (loading && messages.length === 0) {
+  if ((loading && messages.length === 0) || !currentUserId) {
     return (
       <div className={cn('flex flex-col h-full bg-background', className)}>
         {/* Header skeleton */}

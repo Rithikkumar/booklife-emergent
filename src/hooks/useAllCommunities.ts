@@ -16,15 +16,30 @@ export const useAllCommunities = () => {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Fetch all public communities AND user's own private communities
+      // Fetch all public communities AND user's own/joined private communities
       let communitiesData: any[] = [];
       if (user) {
-        // Fetch public communities and user's own communities (including private ones)
-        const { data, error: communitiesError } = await supabase
+        // Get community IDs the user is a member of (to include private ones)
+        const { data: membershipIds } = await supabase
+          .from('community_members')
+          .select('community_id')
+          .eq('user_id', user.id);
+        
+        const memberCommunityIdList = (membershipIds || []).map(m => m.community_id);
+        
+        // Fetch public communities, user's own, and communities user is a member of
+        let query = supabase
           .from('communities')
           .select('*')
-          .or(`is_public.eq.true,created_by.eq.${user.id}`)
           .order('activity_score', { ascending: false });
+        
+        if (memberCommunityIdList.length > 0) {
+          query = query.or(`is_public.eq.true,created_by.eq.${user.id},id.in.(${memberCommunityIdList.join(',')})`);
+        } else {
+          query = query.or(`is_public.eq.true,created_by.eq.${user.id}`);
+        }
+        
+        const { data, error: communitiesError } = await query;
           
         if (communitiesError) throw communitiesError;
         communitiesData = data || [];
@@ -61,7 +76,7 @@ export const useAllCommunities = () => {
         members: community.member_count,
         description: community.description,
         tags: community.tags || [],
-        recentActivity: 'today', // You can enhance this later with actual activity data
+        recentActivity: community.updated_at ? new Date(community.updated_at).toLocaleDateString() : 'No activity',
         isJoined: memberCommunityIds.has(community.id),
         createdBy: community.created_by,
         isCreatedByUser: user?.id === community.created_by,

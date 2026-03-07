@@ -65,7 +65,7 @@ const CommunityCard: React.FC<CommunityCardProps> = ({
               />
             </div>
           </div>
-          <div className="flex-shrink-0 w-full sm:w-auto">
+          <div className="flex-shrink-0 w-full sm:w-auto" onClick={(e) => e.stopPropagation()}>
             {community.isJoined ? (
               <ActionButton
                 variant="outline"

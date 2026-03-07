@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,8 +32,17 @@ const Explore = () => {
     handleSearch, 
     clearFilters 
   } = useBookFiltering();
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const { isBookFollowed, toggleFollow } = useFollowingBooks();
   const { totalCount, loading: countLoading } = useTotalBooksCount();
+
+  // Debounce search input - only call handleSearch after 300ms of no typing
+  const debouncedSearchRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const handleSearchInput = useCallback((value: string) => {
+    setLocalSearchQuery(value);
+    if (debouncedSearchRef.current) clearTimeout(debouncedSearchRef.current);
+    debouncedSearchRef.current = setTimeout(() => handleSearch(value), 300);
+  }, [handleSearch]);
 
   const { stories: recentStories, loading: storiesLoading } = useRecentStories();
   const location = useLocation();
@@ -118,8 +127,8 @@ const Explore = () => {
             <Input
               placeholder="Search by book title, author, genre, or topic..."
               className="pl-10 h-12 border-2 border-border/60 focus:border-primary/50 bg-background/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 w-full"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={localSearchQuery}
+              onChange={(e) => handleSearchInput(e.target.value)}
             />
           </div>
 
@@ -271,6 +280,7 @@ const Explore = () => {
                                 <BookCover 
                                   title={book.title}
                                   author={book.author}
+                                  coverUrl={book.cover_url}
                                   size="M"
                                   className="w-full h-full"
                                 />

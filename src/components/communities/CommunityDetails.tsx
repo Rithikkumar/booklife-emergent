@@ -144,12 +144,18 @@ const CommunityDetails: React.FC<CommunityDetailsProps> = ({
         {/* Community Guidelines */}
         <div className="bg-muted/30 rounded-lg p-4">
           <h3 className="font-medium mb-2 text-sm">Community Guidelines</h3>
-          <ul className="text-xs text-muted-foreground space-y-1">
-            <li>• Be respectful and kind to all community members</li>
-            <li>• Keep discussions relevant to the community topic</li>
-            <li>• No spam, harassment, or inappropriate content</li>
-            <li>• Help create a welcoming environment for everyone</li>
-          </ul>
+          <div className="text-xs text-muted-foreground space-y-1">
+            {(community.guidelines || 'Be respectful and kind to all members\nKeep discussions relevant to community topics\nNo spam, harassment, or inappropriate content\nHelp create a welcoming environment for everyone\nReport any issues to community moderators')
+              .split('\n')
+              .filter((line: string) => line.trim())
+              .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+              .map((guideline: string, index: number) => (
+                <div key={index} className="flex items-start gap-2">
+                  <span>•</span>
+                  <span>{guideline}</span>
+                </div>
+              ))}
+          </div>
         </div>
       </CardContent>
 

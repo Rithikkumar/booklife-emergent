@@ -123,15 +123,28 @@ const Communities = () => {
     }
 
     try {
+      const communityInsert: any = {
+        name: newCommunityData.name,
+        description: newCommunityData.description,
+        tags: newCommunityData.tags || [],
+        created_by: user.id,
+        is_public: !(newCommunityData as any).isPrivate,
+      };
+
+      // Add optional fields if provided
+      if ((newCommunityData as any).category) {
+        communityInsert.category = (newCommunityData as any).category;
+      }
+      if ((newCommunityData as any).rules) {
+        communityInsert.guidelines = (newCommunityData as any).rules;
+      }
+      if ((newCommunityData as any).restrict_messaging !== undefined) {
+        communityInsert.restrict_messaging = (newCommunityData as any).restrict_messaging;
+      }
+
       const { data, error } = await supabase
         .from('communities')
-        .insert({
-          name: newCommunityData.name,
-          description: newCommunityData.description,
-          tags: newCommunityData.tags,
-          category: 'Community',
-          created_by: user.id
-        })
+        .insert(communityInsert)
         .select()
         .single();
 

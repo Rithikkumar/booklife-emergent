@@ -9,7 +9,6 @@ import CommunityActivity from '@/components/communities/CommunityActivity';
 import CommunityAbout from '@/components/communities/CommunityAbout';
 import { useCommunityDetails } from '@/hooks/useCommunityDetails';
 import { useCommunityChat } from '@/hooks/useCommunityChat';
-import { useCommunityGrowth } from '@/hooks/useCommunityGrowth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,15 +26,14 @@ const CommunityDetail: React.FC = () => {
     confirmLeaveCommunity, 
     showLeaveDialog, 
     setShowLeaveDialog,
-    joinRequestStatus
+    joinRequestStatus,
+    refreshCommunity
   } = useCommunityDetails(communityId);
 
   const {
     members,
     loading: membersLoading,
   } = useCommunityChat(communityId);
-
-  const { growth } = useCommunityGrowth(communityId);
 
   const handleBack = () => {
     navigate('/communities');
@@ -127,7 +125,7 @@ const CommunityDetail: React.FC = () => {
         );
         
       case 'activity':
-        return <CommunityActivity community={community} weeklyGrowth={growth?.weeklyNewMembers || 0} />;
+        return <CommunityActivity community={community} />;
         
       case 'about':
         return (
@@ -166,7 +164,7 @@ const CommunityDetail: React.FC = () => {
           showLeaveDialog={showLeaveDialog}
           onConfirmLeave={confirmLeaveCommunity}
           onCancelLeave={() => setShowLeaveDialog(false)}
-              onUpdate={() => {}}
+              onUpdate={() => { if (communityId) { refreshCommunity(true); } }}
           joinRequestStatus={joinRequestStatus}
         />
 

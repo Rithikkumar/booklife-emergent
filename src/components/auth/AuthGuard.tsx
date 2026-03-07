@@ -8,17 +8,14 @@ interface AuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
   redirectTo?: string;
-  requireProfileComplete?: boolean;
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ 
   children, 
   requireAuth = true,
-  redirectTo = '/auth',
-  requireProfileComplete = true
+  redirectTo = '/auth'
 }) => {
-  // Use global auth state from AuthContext - no local state duplication
-  const { user, isLoading, profileComplete } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,11 +32,24 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return () => subscription.unsubscribe();
   }, []);
 
-  // Only show loading skeleton on initial app load (not on navigation)
+  // Handle redirects in useEffect to avoid calling navigate during render
+  useEffect(() => {
+    if (isLoading) return;
+    
+    if (requireAuth && !user) {
+      navigate(redirectTo, { 
+        replace: true,
+        state: { from: location.pathname }
+      });
+    } else if (!requireAuth && user && location.pathname === '/auth') {
+      navigate('/explore', { replace: true });
+    }
+  }, [isLoading, user, requireAuth, redirectTo, location.pathname, navigate]);
+
+  // Show loading skeleton on initial app load
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Navigation skeleton */}
         <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border h-[60px]">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -52,7 +62,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
             </div>
           </div>
         </div>
-        {/* Content skeleton */}
         <div className="pt-[76px] container mx-auto px-4">
           <div className="h-8 w-48 rounded bg-muted animate-pulse mb-4" />
           <div className="h-4 w-64 rounded bg-muted animate-pulse mb-8" />
@@ -65,31 +74,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     );
   }
 
-  // If authentication is required but user is not authenticated
-  if (requireAuth && !user) {
-    navigate(redirectTo, { 
-      replace: true,
-      state: { from: location.pathname }
-    });
-    return null;
-  }
-
-  // If profile completion is required but profile is incomplete (and not on onboarding page)
-  if (requireAuth && user && requireProfileComplete && !profileComplete && location.pathname !== '/onboarding') {
-    navigate('/onboarding', { replace: true });
-    return null;
-  }
-
-  // If authentication is not required but user is authenticated and on auth page
-  if (!requireAuth && user && location.pathname === '/auth') {
-    // Check profile completion before redirecting
-    if (!profileComplete) {
-      navigate('/onboarding', { replace: true });
-    } else {
-      navigate('/explore', { replace: true });
-    }
-    return null;
-  }
+  // Show nothing while redirecting
+  if (requireAuth && !user) return null;
+  if (!requireAuth && user && location.pathname === '/auth') return null;
 
   return <>{children}</>;
 };

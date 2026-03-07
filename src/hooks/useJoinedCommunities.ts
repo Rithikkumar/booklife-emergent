@@ -50,7 +50,7 @@ export const useJoinedCommunities = () => {
         members: community.member_count,
         description: community.description,
         tags: community.tags || [],
-        recentActivity: 'today',
+        recentActivity: community.updated_at ? new Date(community.updated_at).toLocaleDateString() : 'No activity',
         isJoined: true,
         createdBy: community.created_by,
         isCreatedByUser: user.id === community.created_by,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Lock, User, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Lock, User, Search, MessagesSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -11,7 +11,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { logger } from '@/utils/logger';
+import { toast } from 'sonner';
 
 interface FollowersFollowingModalProps {
   isOpen: boolean;
@@ -40,6 +42,7 @@ const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = ({
   type,
   currentUserId,
 }) => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithFollowStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,13 +136,38 @@ const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = ({
     return user.is_private && !user.isFollowing && user.user_id !== currentUserId;
   };
 
+  const handleMessageUser = async (e: React.MouseEvent, targetUserId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentUserId) {
+      toast.error('Please sign in to send messages');
+      return;
+    }
+    try {
+      const { data, error } = await supabase.rpc('get_or_create_chat_room', {
+        p_other_user_id: targetUserId
+      });
+      if (error) throw error;
+      onClose();
+      navigate(`/messages?room=${data}`);
+    } catch (err) {
+      logger.error('Error starting conversation:', err);
+      toast.error('Failed to start conversation');
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
             {type === 'followers' ? 'Followers' : 'Following'}
-            {!loading && ` (${filteredUsers.length})`}
+            {!loading && ` (${users.length})`}
+            {!loading && searchQuery.trim() && filteredUsers.length !== users.length && (
+              <span className="text-muted-foreground font-normal text-sm ml-1">
+                · {filteredUsers.length} match{filteredUsers.length !== 1 ? 'es' : ''}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -181,47 +209,60 @@ const FollowersFollowingModal: React.FC<FollowersFollowingModalProps> = ({
           ) : (
             <div className="space-y-2">
               {filteredUsers.map(user => (
-                <Link
+                <div
                   key={user.user_id}
-                  to={`/profile/${user.username}`}
-                  onClick={onClose}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors group"
                 >
-                  {/* Avatar */}
-                  <div className="relative w-12 h-12 flex-shrink-0">
-                    <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-lg overflow-hidden">
-                      {user.profile_picture_url ? (
-                        <img
-                          src={user.profile_picture_url}
-                          alt={user.display_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        user.display_name?.[0] || user.username[0]
-                      )}
+                  {/* Clickable user info area */}
+                  <Link
+                    to={`/profile/${user.username}`}
+                    onClick={onClose}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    {/* Avatar */}
+                    <div className="relative w-12 h-12 flex-shrink-0">
+                      <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-lg overflow-hidden">
+                        {user.profile_picture_url ? (
+                          <img
+                            src={user.profile_picture_url}
+                            alt={user.display_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          user.display_name?.[0] || user.username[0]
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* User info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-foreground truncate">
-                        {user.display_name}
+                    {/* User info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-foreground truncate">
+                          {user.display_name}
+                        </p>
+                        {showLockIcon(user) && (
+                          <Lock size={14} className="text-muted-foreground flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        @{user.username}
                       </p>
-                      {showLockIcon(user) && (
-                        <Lock size={14} className="text-muted-foreground flex-shrink-0" />
-                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      @{user.username}
-                    </p>
-                  </div>
+                  </Link>
 
-                  {/* Visual indicator for clickable */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                  </div>
-                </Link>
+                  {/* Message button - only show for other users */}
+                  {currentUserId && user.user_id !== currentUserId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleMessageUser(e, user.user_id)}
+                      title={`Message ${user.display_name || user.username}`}
+                    >
+                      <MessagesSquare className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
           )}
